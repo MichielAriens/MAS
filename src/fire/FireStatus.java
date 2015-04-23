@@ -15,7 +15,7 @@ public abstract class FireStatus {
 	public abstract FireStatus extinguish();
 	public abstract FireStatus ignite();
 	
-	public class Fire extends FireStatus{
+	public static class Fire extends FireStatus{
 		
 		@Override
 		public FireStatus tick(TimeLapse time) {
@@ -33,7 +33,7 @@ public abstract class FireStatus {
 		}
 	}
 	
-	public class Wet extends FireStatus{
+	public static class Wet extends FireStatus{
 		private long timeToDry;
 		
 		public Wet(){
@@ -61,7 +61,7 @@ public abstract class FireStatus {
 		}
 	}
 	
-	public class Dry extends FireStatus{
+	public static class Dry extends FireStatus{
 
 		@Override
 		public FireStatus tick(TimeLapse time) {
