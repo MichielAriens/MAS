@@ -9,11 +9,9 @@ import com.github.rinde.rinsim.geom.Point;
 
 public class DumbFireFighter extends FireFighter {
 	
-	private LineOfSight los;
 	
 	public DumbFireFighter(Point startPosition, LineOfSight los, RandomGenerator rnd) {
-		super(startPosition, rnd);
-		this.los = los;
+		super(startPosition, los, rnd);
 	}
 
 	@Override

@@ -26,7 +26,9 @@ public class AntPheromone implements RoadUser, TickListener{
 
 	@Override
 	public void afterTick(TimeLapse timeLapse) {
-		timeToLive -= timeLapse.getTimeConsumed();
+		if(timeToLive > 0){
+			timeToLive -= timeLapse.getTimeConsumed();
+		}
 	}
 
 	@Override

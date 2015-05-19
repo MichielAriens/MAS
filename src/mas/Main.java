@@ -39,8 +39,8 @@ public class Main {
 		MAX_POINT = new Point(20,12);//maxp;
 
 		// first arg: 0 for dumb fire fighters
-		run(0,1,123L);
-		//run(0,5,4);
+		//run(0,1,123L);
+		run(2,2,4);
 		
 //		// TODO voor simulaties:
 //		for (int i = 0; i < 50000; ++i) {
@@ -102,7 +102,9 @@ public class Main {
 	    } else if (modus == 1) {
 	    	// TODO contract net fire fighters
 	    } else if (modus == 2) {
-	    	// TODO ant net fire fighters
+	    	for(int i = 0; i < numFireFighters; i++){
+	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));
+	    	} 
 	    }
 	    
 	    // refill stations
