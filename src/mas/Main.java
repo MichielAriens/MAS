@@ -95,9 +95,10 @@ public class Main {
 	    roadModel.addObjectAt(new Fire(q, roadModel, rng), q);
 	    
 	    // fire fighters
+	    LineOfSight los = new FullLineOfSight(); // TODO dit aanpassen naar believen
 	    if (modus == 0) {
 		    for (int i = 0; i < numFireFighters; i++) {
-		    	sim.register(new DumbFireFighter(roadModel.getRandomPosition(rng), rng));
+		    	sim.register(new DumbFireFighter(roadModel.getRandomPosition(rng), rng, los));
 		    }
 	    } else if (modus == 1) {
 	    	// TODO contract net fire fighters

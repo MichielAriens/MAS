@@ -18,13 +18,15 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
 	protected boolean emptyTank;
 	protected int countDown;
 	protected final int EXT_TIME = 30;
+	protected LineOfSight lineOfSight;
 	
-	public FireFighter(Point startPosition, RandomGenerator rnd) {
+	public FireFighter(Point startPosition, RandomGenerator rnd, LineOfSight los) {
 		this.startPosition = startPosition;
 		target = null;
 		this.rnd = rnd;
 		emptyTank = false;
 		countDown = EXT_TIME;
+		lineOfSight = los;
 	}
 	
 	@Override
