@@ -67,7 +67,22 @@ public class FireGrid {
 		}
 	}
 	
-	
+	/**
+	 * Extinguish cell and cells in a radius around it. 
+	 * @param center
+	 * @param radius
+	 */
+	public void extinguish(Point center, float radius){
+		Coord c = convert(center);
+		int n = (int) Math.ceil(radius/cellSize);
+		for(int i = c.x - n; i <= c.x + n; i++){
+			for(int j = c.y - n; j <= c.y + n; j++){
+				try{
+					grid[i][j] = new FireStatus.Wet();
+				}catch(IndexOutOfBoundsException e){}//ignore edges.
+			}
+		}
+	}
 	
 
 }

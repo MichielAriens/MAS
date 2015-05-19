@@ -3,6 +3,7 @@ package mas;
 import java.util.Set;
 
 import org.apache.commons.math3.random.RandomGenerator;
+import org.eclipse.swt.graphics.RGB;
 
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.TickListener;
@@ -67,7 +68,8 @@ public class Main {
 	        // set the random seed we use in this 'experiment'
 	        // -> Sequences of values generated starting with the same seeds should be identical.
 	        // => TODO seed gebruiken om zelfde situatie voor verschillende communicatiemodellen te evalueren
-	        .setRandomSeed(seed)
+	        //.setRandomSeed(seed)
+	        .setRandomSeed(1)
 	        // add a PlaneRoadModel, a model which facilitates the moving of
 	        // RoadUsers on a plane.
 	        .addModel(roadModel)
@@ -132,8 +134,13 @@ public class Main {
 	            .with(RoadUserRenderer.builder()
 	            	   .addImageAssociation(
 	            	                Fire.class, "/graphics/perspective/tall-building-64.png")
+	            			   		//Fire.class, "c:\\Temp\\img\\fire.png")
+	            			   		
 	            	   .addImageAssociation(
 	    	            	        Wet.class, "/graphics/flat/person-red-32.png"));
+	            			   		//Wet.class, "c:\\Temp\\img\\wet.png"));
+	            		//.addColorAssociation(Fire.class, new RGB(1, 0, 0))
+	            		//.addColorAssociation(Wet.class, new RGB(0, 0, 1)));
 	    viewBuilder.show();
 	    // in case a GUI is not desired, the simulation can simply be run by
 	    // calling the start method of the simulator.

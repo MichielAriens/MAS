@@ -42,6 +42,7 @@ public class Fire extends FireStatus {
 		roadModel.addObjectAt(new Wet(p2, roadModel, rng), p2);
 		roadModel.addObjectAt(new Wet(p3, roadModel, rng), p3);
 		roadModel.addObjectAt(new Wet(p4, roadModel, rng), p4);
+		//TODO: catch placing objects outside the boundries
 	}
 	
 	private void spread() {
