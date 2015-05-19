@@ -4,12 +4,16 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 import com.github.rinde.rinsim.core.TimeLapse;
 import com.github.rinde.rinsim.core.model.road.RoadModels;
+import com.github.rinde.rinsim.core.model.road.RoadUser;
 import com.github.rinde.rinsim.geom.Point;
 
 public class DumbFireFighter extends FireFighter {
-
-	public DumbFireFighter(Point startPosition, RandomGenerator rnd) {
+	
+	private LineOfSight los;
+	
+	public DumbFireFighter(Point startPosition, LineOfSight los, RandomGenerator rnd) {
 		super(startPosition, rnd);
+		this.los = los;
 	}
 
 	@Override
@@ -22,10 +26,9 @@ public class DumbFireFighter extends FireFighter {
 		} else {
 			if (!roadModel.containsObject(target))
 				target = null;
-			
 			if (target==null)
 				target = RoadModels.findClosestObject(
-				          roadModel.getPosition(this), roadModel, Fire.class);
+						roadModel.getPosition(this), roadModel, Fire.class);
 			
 			if (target != null) 
 				roadModel.moveTo(this, target, timeLapse);

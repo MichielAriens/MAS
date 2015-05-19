@@ -40,6 +40,7 @@ public class Main {
 
 		// first arg: 0 for dumb fire fighters
 		run(0,1,123L);
+		//run(0,5,4);
 		
 //		// TODO voor simulaties:
 //		for (int i = 0; i < 50000; ++i) {
@@ -68,8 +69,7 @@ public class Main {
 	        // set the random seed we use in this 'experiment'
 	        // -> Sequences of values generated starting with the same seeds should be identical.
 	        // => TODO seed gebruiken om zelfde situatie voor verschillende communicatiemodellen te evalueren
-	        //.setRandomSeed(seed)
-	        .setRandomSeed(1)
+	        .setRandomSeed(seed)
 	        // add a PlaneRoadModel, a model which facilitates the moving of
 	        // RoadUsers on a plane.
 	        .addModel(roadModel)
@@ -97,7 +97,7 @@ public class Main {
 	    // fire fighters
 	    if (modus == 0) {
 		    for (int i = 0; i < numFireFighters; i++) {
-		    	sim.register(new DumbFireFighter(roadModel.getRandomPosition(rng), rng));
+		    	sim.register(new DumbFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), rng));
 		    }
 	    } else if (modus == 1) {
 	    	// TODO contract net fire fighters
@@ -136,17 +136,17 @@ public class Main {
 	            .with(RoadUserRenderer.builder()
 	            	   .addImageAssociation(
 	            	                Fire.class, "/graphics/perspective/tall-building-64.png")
-	            			   		//Fire.class, "c:\\Temp\\img\\fire.png")
+	            			   		//Fire.class, "img/fire.png")
 	            			   		
 	            	   .addImageAssociation(
 	    	            	        Wet.class, "/graphics/flat/person-red-32.png"));
-	            			   		//Wet.class, "c:\\Temp\\img\\wet.png"));
-	            		//.addColorAssociation(Fire.class, new RGB(1, 0, 0))
-	            		//.addColorAssociation(Wet.class, new RGB(0, 0, 1)));
+	            			   		//Wet.class, "img/wet.png"));
 	    viewBuilder.show();
 	    // in case a GUI is not desired, the simulation can simply be run by
 	    // calling the start method of the simulator.
 	}
+	
+	
 	
 	private static boolean isPointInBoundary(Point p) {
 		return p.x > MIN_POINT.x+0.5 && p.x < MAX_POINT.x-0.5 && p.y > MIN_POINT.y+0.5 && p.y < MAX_POINT.y-0.5;
