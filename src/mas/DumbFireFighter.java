@@ -16,7 +16,7 @@ public class DumbFireFighter extends FireFighter {
 
 	@Override
 	public void tick(TimeLapse timeLapse) {
-		if (countDown < EXT_TIME)
+		if (countDown < EXT_TIME) // this means we're extinguishing fire atm
 			return;
 		if (emptyTank) {
 			// we assume a firefighter knows the position of all refill stations and doesn't
