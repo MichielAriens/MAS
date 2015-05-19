@@ -89,6 +89,8 @@ public class Main {
 	    do {
 	    	q = roadModel.getRandomPosition(rng);
 	    } while (!isPointInBoundary(q));
+	    p = new Point((int)p.x, (int)p.y);
+	    q = new Point((int)q.x, (int)q.y);
 	    roadModel.addObjectAt(new Fire(p, roadModel, rng), p);
 	    roadModel.addObjectAt(new Fire(q, roadModel, rng), q);
 	    

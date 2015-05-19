@@ -68,9 +68,9 @@ public class Fire extends FireStatus {
     	if (d < 0.5)
     		return new Point(p.x, p.y -1);
     	if (d < 0.75)
-    		return new Point(p.x +1, p.y +1);
+    		return new Point(p.x +1, p.y);
     	else
-    		return new Point(p.x -1, p.y +1);
+    		return new Point(p.x -1, p.y);
     }
 	
 	private boolean isPointInBoundary(Point p) {
