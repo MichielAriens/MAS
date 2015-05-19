@@ -42,5 +42,22 @@ public class DumbFireFighter extends FireFighter {
 		}
 		
 	}
+	
+	@Override
+	public void afterTick(TimeLapse timeLapse) {
+		if (roadModel.equalPosition(this, target)) {
+			--countDown;
+			if (countDown == 0) {
+				target.extinguish();
+				emptyTank = true;
+	        	target = null;
+	        	countDown = EXT_TIME;
+			}
+        } else if (roadModel.equalPosition(this, refillStation)) {
+        	emptyTank = false;
+        	refillStation = null;
+        }
+		
+	}
 
 }

@@ -45,6 +45,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		// (3) the contractor can let us know (if he can reach us)
 		
 		// TODO : device.broadcast(contents); broadcasts tasks
+		// TODO 1 message voor iedere task of allemaal in 1 shteken?
+				// hangt er vanaf of taskabstraction gebruikt wordt om al dan niet te bidden
 		
 		if (countDown < EXT_TIME) // this means we're extinguishing fire atm
 			return;
@@ -59,7 +61,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				target = null;
 			
 			if (target == null) {
-				// TODO bit on own / other task lists (?)
+				// TODO bid on own / other task lists (?)
+				// bid met: huidige positie, target positie, hebEenTarget ?
 			}
 			
 			// let's move
@@ -70,6 +73,24 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
 			}
 		}
+	}
+	
+	@Override
+	public void afterTick(TimeLapse timeLapse) {
+		if (roadModel.equalPosition(this, target)) {
+			--countDown;
+			if (countDown == 0) {
+				target.extinguish();
+				emptyTank = true;
+	        	target = null;
+	        	countDown = EXT_TIME;
+	        	// TODO broadcast the extinguishing?
+			}
+        } else if (roadModel.equalPosition(this, refillStation)) {
+        	emptyTank = false;
+        	refillStation = null;
+        }
+		
 	}
 
 	@Override
@@ -84,5 +105,6 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	    }
 	    device = builder.setReliability(reliability).build();
 	}
+	
 
 }
