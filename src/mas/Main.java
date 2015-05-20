@@ -97,7 +97,9 @@ public class Main {
 	    // fire fighters
 	    if (modus == 0) {
 		    for (int i = 0; i < numFireFighters; i++) {
+
 		    	sim.register(new DumbFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), rng));
+
 		    }
 	    } else if (modus == 1) {
 	    	// TODO contract net fire fighters

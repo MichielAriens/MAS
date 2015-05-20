@@ -19,6 +19,7 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
 	protected boolean emptyTank;
 	protected int countDown;
 	protected final int EXT_TIME = 30;
+
 	protected LineOfSight los;
 	
 	public FireFighter(Point startPosition, LineOfSight los, RandomGenerator rnd) {
@@ -84,5 +85,6 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
         }
 		
 	}
+
 
 }
