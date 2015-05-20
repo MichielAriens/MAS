@@ -57,8 +57,10 @@ public class DumbFireFighter extends FireFighter {
 		if (roadModel.equalPosition(this, target)) {
 			--countDown;
 			if (countDown == 0) {
-				target.extinguish();
-				emptyTank = true;
+				if(target instanceof Fire){
+					((Fire) target).extinguish();
+					emptyTank = true;
+				}
 	        	target = null;
 	        	countDown = EXT_TIME;
 			}

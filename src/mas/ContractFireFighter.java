@@ -28,7 +28,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	// task maar aan 1 contractor geven
 	// wat als verschillende manager zelfde task hebben -> zo kunnen toch verschillende contractors zelfs task krijgen
 	public ContractFireFighter(Point startPosition, RandomGenerator rnd, LineOfSight los) {
-		super(startPosition, rnd, los);
+		super(startPosition, los, rnd);
 		tasks = new HashSet<>();
 		lastAnnouncementTime = -9999999;
 	}
@@ -41,7 +41,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		
 		// we always look around for fire
 		Collection<Fire> closeFire = RoadModels.findObjectsWithinRadius(roadModel.getPosition(this), 
-					roadModel, lineOfSight.getVisionRadius(), Fire.class);
+					roadModel, los.getVisionRadius(), Fire.class);
 		boolean hasChanged = tasks.addAll(closeFire); // no doubles are added
 		
 		// we broadcast if there are new tasks or when we haven't broadcasted in a while (a tick is 10000)
@@ -111,9 +111,11 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		if (roadModel.equalPosition(this, target)) {
 			--countDown;
 			if (countDown == 0) {
-				target.extinguish();
-				emptyTank = true;
-	        	target = null;
+				if(target instanceof Fire){
+					((Fire) target).extinguish();
+					emptyTank = true;
+				}
+				target = null;
 	        	countDown = EXT_TIME;
 	        	// TODO broadcast the extinguishing?
 			}

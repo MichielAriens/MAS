@@ -1,15 +1,17 @@
 package mas;
 
+import com.github.rinde.rinsim.core.model.road.RoadUser;
+
 
 public class FullLineOfSight extends LineOfSight{
 
 	@Override
-	boolean canSee(FireFighter fighter, Fire fire) {
+	boolean canSee(RoadUser u1, RoadUser u2) {
 		 return true;
 	}
 
 	@Override
-	boolean canComm(FireFighter ff1, FireFighter ff2) {
+	boolean canComm(RoadUser u1, RoadUser u2) {
 		return true;
 	}
 

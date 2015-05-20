@@ -31,4 +31,9 @@ public class SimpleLimitedLOS extends LineOfSight{
 		}return false;
 	}
 
+	@Override
+	double getVisionRadius() {
+		return viewDist;
+	}
+
 }
