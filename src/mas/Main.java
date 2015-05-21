@@ -40,7 +40,7 @@ public class Main {
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
-		run(2,2,4);
+		run(2,7,4);
 		
 //		// TODO voor simulaties:
 //		for (int i = 0; i < 50000; ++i) {
@@ -143,8 +143,10 @@ public class Main {
 	            			   		//Fire.class, "img/fire.png")
 	            			   		
 	            	   .addImageAssociation(
-	    	            	        Wet.class, "/graphics/flat/person-red-32.png"));
+	    	            	        Wet.class, "/graphics/flat/person-red-32.png")
 	            			   		//Wet.class, "img/wet.png"));
+	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
+	    	     );      
 	    viewBuilder.show();
 	    // in case a GUI is not desired, the simulation can simply be run by
 	    // calling the start method of the simulator.

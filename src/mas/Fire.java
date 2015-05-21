@@ -10,13 +10,17 @@ import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.geom.Point;
 
 public class Fire extends FireStatus {
+	
+	private static final double FIRE_SPREAD_CHANCE = .0115;
+	
+	
 	public Fire(Point pos, RoadModel model, RandomGenerator rnd) {
 		super(pos, model, rnd);
 	}
 
 	@Override
 	public void tick(TimeLapse time) {
-		if (rng.nextDouble() < .0115) {
+		if (rng.nextDouble() < FIRE_SPREAD_CHANCE) {
 			spread();
 		}
 	}

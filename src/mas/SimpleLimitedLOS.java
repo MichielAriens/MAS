@@ -19,6 +19,9 @@ public class SimpleLimitedLOS extends LineOfSight{
 	
 	@Override
 	boolean canComm(RoadUser u1, RoadUser u2) {
+		if(u1 == null || u2 == null){
+			return false;
+		}
 		if(Point.distance(roadModel.getPosition(u1), roadModel.getPosition(u2)) <= commDist){
 			return true;
 		}return false;
@@ -26,6 +29,9 @@ public class SimpleLimitedLOS extends LineOfSight{
 	
 	@Override
 	boolean canSee(RoadUser u1, RoadUser u2) {
+		if(u1 == null || u2 == null){
+			return false;
+		}
 		if(Point.distance(roadModel.getPosition(u1), roadModel.getPosition(u2)) <= viewDist){
 			return true;
 		}return false;

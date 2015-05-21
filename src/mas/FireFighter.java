@@ -72,6 +72,12 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
 		if (roadModel.equalPosition(this, target)) {
 			--countDown;
 			if (countDown == 0) {
+				if(target instanceof RefillStation){
+					emptyTank = false;
+				}
+				if(target instanceof DummyRoadUser){
+					roadModel.removeObject(target);
+				}
 				if(target instanceof Fire){
 					((Fire)target).extinguish();
 					emptyTank = true;
@@ -79,10 +85,12 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
 	        	target = null;
 	        	countDown = EXT_TIME;
 			}
-        } else if (roadModel.equalPosition(this, refillStation)) {
-        	emptyTank = false;
-        	refillStation = null;
-        }
+        } 
+		
+//		else if (roadModel.equalPosition(this, refillStation)) {
+//        	emptyTank = false;
+//        	refillStation = null;
+//        }
 		
 	}
 
