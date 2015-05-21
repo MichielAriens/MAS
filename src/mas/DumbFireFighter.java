@@ -30,16 +30,16 @@ public class DumbFireFighter extends FireFighter {
 			if (!roadModel.containsObject(target))
 				target = null;
 
-			if (target==null)
-				target = RoadModels.findClosestObject(
-						roadModel.getPosition(this), roadModel, Fire.class);
+//			if (target==null)
+//				target = RoadModels.findClosestObject(
+//						roadModel.getPosition(this), roadModel, Fire.class);
 
 			
-//			if (target==null) {
-//				Collection<Fire> closeFire = RoadModels.findObjectsWithinRadius(roadModel.getPosition(this), 
-//						roadModel, lineOfSight.getVisionRadius(), Fire.class);
-//				target = RoadModels.findClosestObject(roadModel.getPosition(this), roadModel, closeFire);
-//			}
+			if (target==null) {
+				Collection<Fire> closeFire = RoadModels.findObjectsWithinRadius(roadModel.getPosition(this), 
+						roadModel, los.getVisionRadius(), Fire.class);
+				target = RoadModels.findClosestObject(roadModel.getPosition(this), roadModel, closeFire);
+			}
 
 			
 			if (target != null) 
