@@ -105,7 +105,8 @@ public class Main {
 	    	// TODO contract net fire fighters
 	    } else if (modus == 2) {
 	    	for(int i = 0; i < numFireFighters; i++){
-	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));
+	    		//sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));
+	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), rng));
 	    	} 
 	    }
 	    

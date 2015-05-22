@@ -37,4 +37,9 @@ public class AntPheromone implements RoadUser, TickListener{
 		roadModel.addObjectAt(this, pos);
 	}
 
+	public long getAge(){
+		return timeToLive;
+		
+	}
+
 }
