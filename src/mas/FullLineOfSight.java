@@ -20,4 +20,11 @@ public class FullLineOfSight extends LineOfSight{
 		return Double.MAX_VALUE;
 	}
 
+	@Override
+	double getCommunicationRadius() {
+		return Double.MAX_VALUE;
+	}
+	
+	
+
 }

@@ -1,10 +1,13 @@
 package mas;
 
 import java.util.Collection;
+import java.util.EmptyStackException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -22,8 +25,7 @@ import com.google.common.base.Optional;
 
 public class ContractFireFighter extends FireFighter implements CommUser {
 	private CommDevice device;
-	private final double RANGE = 3;
-	private double reliability = 1; // kan mss veranderen door situatie?
+	private double reliability = 1; // CHOICE kan dit veranderen?
 	private Set<Fire> tasks;
 	private long lastAnnouncementTime;
 	private Stack<Message> awardedContracts;
@@ -32,7 +34,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	// hou een lijst bij van plaatsen waar je weet dat vuur is; hiervoor kan je manager zijn
 	// task maar aan 1 contractor geven
 	// wat als verschillende manager zelfde task hebben -> zo kunnen toch verschillende contractors zelfs task krijgen
-	public ContractFireFighter(Point startPosition, RandomGenerator rnd, LineOfSight los) {
+	public ContractFireFighter(Point startPosition, LineOfSight los, RandomGenerator rnd) {
 		super(startPosition, los, rnd);
 		tasks = new HashSet<>();
 		lastAnnouncementTime = -9999999;
@@ -41,9 +43,6 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 
 	@Override
 	public void tick(TimeLapse timeLapse) {
-		// TODO
-		// als die zelf geen target heeft gaat die een task aan zichzelf geven
-		// als die al een target heeft komt het in de lijst van tasks waarvoor contractors gezocht worden
 		
 		// we always look around for fire
 		Collection<Fire> closeFire = RoadModels.findObjectsWithinRadius(roadModel.getPosition(this), 
@@ -70,8 +69,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				if (target==null && m.getContents().getClass() == ContractTaskAnnouncement.class) {
 					contractsToPickFrom.add(m);
 				} else if (m.getContents().getClass() == ContractTaskBid.class) {
-					// TODO als er eentje goed genoeg is onmiddellijk awarden, anders wachten (tot deadline)
-					// TODO dus alle bids bijhouden zolang je niet ge-award hebt
+					// CHOICE we awarden onmiddellijk om geen tijd te verliezen, we houden dus geen bids bij in de hoop
+					// een betere te krijgen
 					bidsToPickFrom.add(m);
 				} else if (m.getContents().getClass() == ContractTaskAward.class) {
 					// CHOICE queue awarded contracts /vs accept one
@@ -82,7 +81,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 						tasks.remove(report.task);
 				}
 			}
-			if (!contractsToPickFrom.isEmpty())
+			if (target == null && !contractsToPickFrom.isEmpty())
 				selectBestAndBid(contractsToPickFrom); // CHOICE bid on only 1 /vs more
 			
 			if (!bidsToPickFrom.isEmpty())
@@ -107,10 +106,10 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 			roadModel.moveTo(this, refillStation, timeLapse);
 		} else {
 			if (target == null) {
-				targetContract = awardedContracts.pop();
-				target = ((ContractTaskAward)targetContract.getContents()).task;
-				// TODO bid on own / other task lists (?)
-				// bid met: huidige positie, target positie, TODO hebEenTarget ?
+				try {
+					targetContract = awardedContracts.pop();
+					target = ((ContractTaskAward)targetContract.getContents()).task;
+				} catch (EmptyStackException ex) {}
 			}
 			
 			// let's move
@@ -118,11 +117,15 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				// if we can see the target we check if it's still there
 				if (los.canSee(this, target)) {
 					if (!roadModel.containsObject(target)) {
+						
 						device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
-						targetContract = awardedContracts.pop();
-						target = ((ContractTaskAward)targetContract.getContents()).task;
+						try {
+							targetContract = awardedContracts.pop();
+							target = ((ContractTaskAward)targetContract.getContents()).task;
+						} catch (EmptyStackException ex) {}
 					}
-				} else {
+				}
+				if (target != null) {
 					// we move to the position of the target (possibly target is already extinguished)
 					roadModel.moveTo(this, ((Fire)target).position, timeLapse);
 				}
@@ -136,7 +139,15 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	
 	@Override
 	public void afterTick(TimeLapse timeLapse) {
-		if (this.getPosition().equals(((Fire)target).position)) {
+//		if (target != null && this.getPosition().equals(((Fire)target).position)) {  dit werkt blijkbaar niet
+		if (target != null && !roadModel.containsObject(target)) {
+			// it's extinguished!
+			device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
+			target = null;
+        	countDown = EXT_TIME;
+        	return;
+		}
+		if (target != null && roadModel.containsObject(target) && roadModel.equalPosition(this, target)) {
 			--countDown;
 			if (countDown == 0) {
 				if(target instanceof Fire){
@@ -161,9 +172,11 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 
 	@Override
 	public void setCommDevice(CommDeviceBuilder builder) {
-		if (RANGE >= 0) {
-		      builder.setMaxRange(RANGE);
-	    }
+//		if (RANGE >= 0) {
+//		      builder.setMaxRange(RANGE);
+//	    }
+//	    device = builder.setReliability(reliability).build();
+		builder.setMaxRange(los.getCommunicationRadius());
 	    device = builder.setReliability(reliability).build();
 	}
 	
@@ -187,8 +200,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		}
 		
 		// bid on best contract
-		// TODO can comm?
-		device.send(new ContractTaskBid(bestContract.point, myPosition), bestContract.message.getSender());
+		if (los.canComm(this, (ContractFireFighter)bestContract.message.getSender()))
+			device.send(new ContractTaskBid(bestContract.point, myPosition), bestContract.message.getSender());
 	}
 	
 	private Point selectBestFromContractBundle(Message m) {
@@ -212,38 +225,48 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	 * @param bids
 	 */
 	
-	// TODO lijst van bids kan voor verschillende tasks zijn, nu award die slechts 1 task
 	private void selectBestAndAward(List<Message> bids) {
-		Message bestBidMessage = null;
-		ContractTaskBid bestBidContent = null;
-		Fire bestTask = null;
+		PointMessages pm = new PointMessages();
 		
-		// TODO organise bids per task
-		// then get best for each task and see if it suffices
-		
+		// organise bids per task
+		// then get best for each task
 		for (Message m : bids) {
-			ContractTaskBid b = (ContractTaskBid) m.getContents();
-			Fire f;
-			// check if we still offer the task
-			if ((f = taskAvailable(b.taskPoint)) == null)
-				continue;
-			
-			if (bestTask == null) {
-				bestTask = f;
-				bestBidContent = b;
-				bestBidMessage = m;
-				continue;
-			}
-			
-			if (Point.distance(b.taskPoint, b.bidPoint) < Point.distance(bestBidContent.taskPoint, bestBidContent.bidPoint)) {
-				bestBidMessage = m;
-				bestBidContent = b;
-				bestTask = f;
-			}
+			pm.add(new Tuple(((ContractTaskBid)m.getContents()).taskPoint, m));
 		}
 		
-		// send award to best bid that we still have a task for TODO can comm?
-		device.send(new ContractTaskAward(bestTask), bestBidMessage.getSender());
+		Set<Point> points = pm.getPoints();
+		
+		for (Point p : points) {
+			List<Message> messages = pm.getAll(p);
+			Message bestBidMessage = null;
+			ContractTaskBid bestBidContent = null;
+			Fire bestTask = null;
+			for (Message m : messages) {
+				ContractTaskBid b = (ContractTaskBid) m.getContents();
+				Fire f;
+				// check if we still offer the task
+				if ((f = taskAvailable(b.taskPoint)) == null)
+					continue;
+				
+				if (bestTask == null) {
+					bestTask = f;
+					bestBidContent = b;
+					bestBidMessage = m;
+					continue;
+				}
+				
+				if (Point.distance(b.taskPoint, b.bidPoint) < Point.distance(bestBidContent.taskPoint, bestBidContent.bidPoint)) {
+					bestBidMessage = m;
+					bestBidContent = b;
+					bestTask = f;
+				}
+			}
+			// send award to best bid that we still have a task for
+			if (bestTask != null && los.canComm(this, (ContractFireFighter)bestBidMessage.getSender())) 
+				device.send(new ContractTaskAward(bestTask), bestBidMessage.getSender());
+		}
+		
+		
 	}
 	
 	private Fire taskAvailable(Point p) {
@@ -261,7 +284,30 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		    this.point = x; 
 		    this.message = y; 
 		  } 
-	} 
+	}
+	
+	private class PointMessages {
+		private List<Tuple<Point, Message>> tuples;
+		
+		public PointMessages() {tuples = new LinkedList<>();}
+		public void add(Tuple<Point, Message> tuple) {
+			tuples.add(tuple);
+		}
+		public List<Message> getAll(Point p) {
+			List<Message> messages = new LinkedList<>();
+			for (Tuple t : tuples) {
+				if (t.point.equals(p))
+					messages.add((com.github.rinde.rinsim.core.model.comm.Message) t.message);
+			}
+			return messages;
+		}
+		public Set<Point> getPoints() {
+			Set<Point> points = new HashSet<>();
+			for (Tuple t : tuples)
+				points.add((com.github.rinde.rinsim.geom.Point) t.point);
+			return points;
+		}
+	}
 
 	// We don't need explicit contract identifiers in our messages because the contract is
 	// identified by the combination of the point of fire and the message sender

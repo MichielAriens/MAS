@@ -42,4 +42,9 @@ public class SimpleLimitedLOS extends LineOfSight{
 		return viewDist;
 	}
 
+	@Override
+	double getCommunicationRadius() {
+		return commDist;
+	}
+
 }
