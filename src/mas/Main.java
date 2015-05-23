@@ -156,7 +156,10 @@ public class Main {
 	            	   .addImageAssociation(
 	    	            	        Wet.class, "/graphics/flat/person-red-32.png")
 	            			   		//Wet.class, "img/wet.png"));
+	    	           .addImageAssociation(
+	    	            	        AntFireFighter.class, "/graphics/flat/bus-32.png")
 	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
+	    	           .addColorAssociation(AntPheromone.class, new RGB(0, 255, 0))
 	    	     );      
 	    viewBuilder.show();
 	    // in case a GUI is not desired, the simulation can simply be run by

@@ -2,6 +2,7 @@ package mas;
 
 import java.util.List;
 
+import org.apache.commons.math3.analysis.integration.RombergIntegrator;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import com.github.rinde.rinsim.core.TimeLapse;
@@ -35,7 +36,7 @@ public class AntFireFighter extends FireFighter{
 	@Override
 	public void tick(TimeLapse timeLapse) {
 		checkState(timeLapse);
-		//System.out.println(state);
+		System.out.println(state);
 		
 		if(state == state.LOOKING_FOR_FIRE || state == state.FOUND_FIRE){
 			resolveTargetWandering(timeLapse);
@@ -95,6 +96,31 @@ public class AntFireFighter extends FireFighter{
 			}
 			target = newT;
 		}
+		//if nothing found try using pheromones
+		if(target == null){
+			List<AntPheromone> pheroms = RoadModels.findClosestObjects(roadModel.getPosition(this), roadModel, AntPheromone.class, 3);
+			if(pheroms.isEmpty()){
+				//nothing
+			}else if(pheroms.size() == 1){
+				if(this.los.canSee(this, pheroms.get(0))){
+					target = pheroms.get(0);
+				}
+			}else{
+				AntPheromone best = null;
+				for(AntPheromone p : pheroms){
+					if(!this.los.canSee(this, p)){
+						break;
+					}
+					if(best == null){
+						best = p;
+					}else if(p.getTimeToLive() > best.getTimeToLive()){
+						best = p;
+					}
+				}
+				target = best;
+			}
+		}
+		//if still nothing randomly wander.
 		if(target == null){
 			target = new DummyRoadUser();
 			roadModel.addObjectAt(target, roadModel.getRandomPosition(rnd));
