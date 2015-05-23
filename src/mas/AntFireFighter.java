@@ -11,7 +11,9 @@ import com.github.rinde.rinsim.geom.Point;
 
 public class AntFireFighter extends FireFighter{
 	
-	private Point returnTo = null;
+	private static final float PHEROMONE_DISTANCE = 1;
+	
+	private DummyRoadUser returnTo = null;
 	private AntPheromone lastPlacedPheromone = null;
 	
 	
@@ -39,12 +41,15 @@ public class AntFireFighter extends FireFighter{
 			resolveTargetWandering(timeLapse);
 		}else if(state == state.LOOKING_FOR_WATER || state == state.FOUND_WATER){
 			resolveTargetLookingForWater(timeLapse);
-		}else if(state == )
+		}else if(state == state.TRACING){
+			traceBack(timeLapse);
+		}
 		
 		
 		move(timeLapse);
 	}
 
+	
 	private void checkState(TimeLapse timeLapse) {
 		if(emptyTank){
 			if(target == null || target instanceof DummyRoadUser){
@@ -53,10 +58,9 @@ public class AntFireFighter extends FireFighter{
 				state = State.FOUND_WATER;
 			}
 		}else{
-			//if(returnTo != null){
-			//	state = State.TRACING;
-			//}
-			else if(target == null || target instanceof DummyRoadUser){
+			if(returnTo != null){
+				state = State.TRACING;
+			}else if(target == null || target instanceof DummyRoadUser){
 				state = State.LOOKING_FOR_FIRE;
 			}else{
 				state = State.FOUND_FIRE;
@@ -65,8 +69,13 @@ public class AntFireFighter extends FireFighter{
 	}
 
 	private void move(TimeLapse timeLapse) {
-		if(returnTo != null){
-			roadModel.moveTo(this, returnTo, timeLapse);
+		if(returnTo != null && state == State.TRACING){
+			if(roadModel.containsObject(returnTo)){
+				roadModel.moveTo(this, returnTo, timeLapse);
+			}else{
+				returnTo = null;
+			}
+			
 		}
 		if(target != null){
 			if(roadModel.containsObject(target)){
@@ -108,10 +117,31 @@ public class AntFireFighter extends FireFighter{
 		}
 	}
 	
+	
+	private void traceBack(TimeLapse timeLapse) {
+		if(roadModel.equalPosition(this, returnTo)){
+			returnTo = null;
+		}
+		Point pos = roadModel.getPosition(this);
+		if(lastPlacedPheromone == null 
+				|| 
+				(roadModel.containsObject(lastPlacedPheromone)
+						&& Point.distance(pos, roadModel.getPosition(this.lastPlacedPheromone)) >= PHEROMONE_DISTANCE)){
+			lastPlacedPheromone = new AntPheromone(pos);
+			//roadModel.addObjectAt(lastPlacedPheromone, pos);
+			roadModel.register(lastPlacedPheromone);
+			//roadModel.
+		}
+		target = returnTo;
+		
+	}
+
 	@Override
 	public void afterTick(TimeLapse timeLapse) {
 		if (roadModel.equalPosition(this, target)) {
 			--countDown;
+			//todo countdown removed.
+			countDown = 0;
 			if (countDown == 0) {
 				if(target instanceof RefillStation){
 					emptyTank = false;
@@ -120,6 +150,8 @@ public class AntFireFighter extends FireFighter{
 					roadModel.removeObject(target);
 				}
 				if(target instanceof Fire){
+					returnTo = new DummyRoadUser();
+					roadModel.addObjectAtSamePosition(returnTo, target);
 					((Fire)target).extinguish();
 					emptyTank = true;
 				}
@@ -127,6 +159,6 @@ public class AntFireFighter extends FireFighter{
 	        	countDown = EXT_TIME;
 			}
         } 
-
+	}
 
 }

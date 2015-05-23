@@ -41,7 +41,7 @@ public class Main {
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
-		run(2,5,20,1);
+		run(2,4,3,2);
 		
 //		// TODO voor simulaties:
 //		for (int i = 0; i < 50000; ++i) {
@@ -107,7 +107,7 @@ public class Main {
 	    } else if (modus == 2) {
 	    	for(int i = 0; i < numFireFighters; i++){
 	    		//sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));
-	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(3,3, roadModel), rng));	    	
+	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5, roadModel), rng));	    	
 	    	} 
 	    }
 	    
@@ -131,10 +131,19 @@ public class Main {
 	        	Set<FireStatus> cells = roadModel.getObjectsOfType(FireStatus.class);
 	        	for (FireStatus f : cells)
 	        		f.tick(time);
+	        	Set<AntPheromone> pheroms = roadModel.getObjectsOfType(AntPheromone.class);
+	        	for(AntPheromone f : pheroms){
+	        		f.tick(time);
+	        	}
 	        }
 
 	        @Override
-	        public void afterTick(TimeLapse timeLapse) {}
+	        public void afterTick(TimeLapse time) {
+	        	Set<AntPheromone> pheroms = roadModel.getObjectsOfType(AntPheromone.class);
+	        	for(AntPheromone f : pheroms){
+	        		f.afterTick(time);
+	        	}
+	        }
 	      });
 	    
 	    final View.Builder viewBuilder = View.create(sim)

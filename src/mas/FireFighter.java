@@ -71,6 +71,7 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
 	public void afterTick(TimeLapse timeLapse) {
 		if (roadModel.equalPosition(this, target)) {
 			--countDown;
+			countDown = 0;
 			if (countDown == 0) {
 				if(target instanceof RefillStation){
 					emptyTank = false;
@@ -86,13 +87,14 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
 	        	countDown = EXT_TIME;
 			}
         } 
+	}
 		
 //		else if (roadModel.equalPosition(this, refillStation)) {
 //        	emptyTank = false;
 //        	refillStation = null;
 //        }
-		
-	}
+	
+	
 
 
 }
