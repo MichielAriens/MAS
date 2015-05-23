@@ -41,7 +41,7 @@ public class Main {
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
-		run(0,3,1);
+		run(1,3,1);
 		
 //		// TODO voor simulaties:
 //		for (int i = 0; i < 50000; ++i) {

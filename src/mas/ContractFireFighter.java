@@ -2,12 +2,9 @@ package mas;
 
 import java.util.Collection;
 import java.util.EmptyStackException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -43,6 +40,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 
 	@Override
 	public void tick(TimeLapse timeLapse) {
+		System.out.println("Tick: " + timeLapse.getStartTime());
 		
 		// we always look around for fire
 		Collection<Fire> closeFire = RoadModels.findObjectsWithinRadius(roadModel.getPosition(this), 
@@ -58,6 +56,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				taskPoints.add(f.getPosition());
 			}
 			device.broadcast(new ContractTaskAnnouncement(taskPoints, lastAnnouncementTime + 100000));
+//			device.send(new ContractTaskAnnouncement(taskPoints, lastAnnouncementTime + 100000), this);
 		}
 		
 		// we listen for broadcasts as well
@@ -131,7 +130,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				}
 			}
 			else { 
-				// patrouilling TODO less random patrouilling
+				// patrolling TODO less random patrolling
 				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
 			}
 		}
@@ -186,11 +185,16 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	 * @param contracts
 	 */
 	private void selectBestAndBid(List<Message> bundledContracts) {
+		System.out.println(this + " is going to bid");
 		List<Tuple<Point,Message>> bestPerBundle = new LinkedList<>();
 		
 		for (Message m : bundledContracts) {
 			bestPerBundle.add(new Tuple<Point, Message>(selectBestFromContractBundle(m), m));
 		}
+		
+		// TODO die waarvan de deadline voorbij is verwijderen! 
+		// TODO sorteren zodat ze in ieder FF hetzelfde staan, als 2 FF's dan op dezelfde bidden
+		// komt dit ook bij dezelfde manager aan -> efficienter
 		
 		Tuple<Point, Message> bestContract = bestPerBundle.get(0);
 		Point myPosition = roadModel.getPosition(this);
@@ -198,6 +202,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 			if (Point.distance(bestContract.point, myPosition) > Point.distance(t.point, myPosition))
 				bestContract = t;
 		}
+		
+		System.out.println(this + " is going to bid for " + bestContract.point + " which is a task of " + bestContract.message.getSender());
 		
 		// bid on best contract
 		if (los.canComm(this, (ContractFireFighter)bestContract.message.getSender()))
@@ -313,7 +319,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	// identified by the combination of the point of fire and the message sender
 	public class ContractTaskAnnouncement implements MessageContents {
 		//public final Point elegibilityRange; // don't think this is necessary
-		public final Set<Point> taskAbstraction; // the point where the fire is
+		public final Set<Point> taskAbstraction; // the points where the fire is
 		//public final Point bidSpecification; // as bid we expect a point, but i don't think it's necessary to express this here
 		public final long expirationTime; // deadline for sending bids
 		
