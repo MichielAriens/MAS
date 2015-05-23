@@ -42,8 +42,6 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 
 	@Override
 	public void tick(TimeLapse timeLapse) {
-		System.out.println("Tick: " + timeLapse.getStartTime());
-		
 		// we always look around for fire
 		Collection<Fire> closeFire = RoadModels.findObjectsWithinRadius(roadModel.getPosition(this), 
 					roadModel, los.getVisionRadius(), Fire.class);
@@ -72,7 +70,6 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 						contractsToPickFrom.add(m);
 					else
 						taskAnnouncements.add(m);
-					// TODO als wel een target gaan we announcements opslaan!
 				} else if (m.getContents().getClass() == ContractTaskBid.class) {
 					// CHOICE we awarden onmiddellijk om geen tijd te verliezen, we houden dus geen bids bij in de hoop
 					// een betere te krijgen
@@ -208,7 +205,10 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 			bestPerBundle.add(new Tuple<Point, Message>(selectBestFromContractBundle(m), m));
 		}
 		
-		// TODO sorteren zodat ze in ieder FF hetzelfde staan, als 2 FF's dan op dezelfde bidden
+		// TODO is it possible to select a task in such a way that when another agv has the same task, it will always
+		// select it from the same manager if possible ?
+		
+		// sorteren zodat ze in ieder FF hetzelfde staan, als 2 FF's dan op dezelfde bidden
 		// komt dit ook bij dezelfde manager aan -> efficienter
 		// Denk dat dan alleen nodig hetzelfde punt gekozen kan worden als ze ieder manager van elkaar zijn
 		// in de tekst: "to reduce the chance of bidding on the same task with a different manager ..."
