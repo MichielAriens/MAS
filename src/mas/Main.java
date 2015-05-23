@@ -8,6 +8,7 @@ import org.eclipse.swt.graphics.RGB;
 import com.github.rinde.rinsim.core.Simulator;
 import com.github.rinde.rinsim.core.TickListener;
 import com.github.rinde.rinsim.core.TimeLapse;
+import com.github.rinde.rinsim.core.model.comm.CommModel;
 import com.github.rinde.rinsim.core.model.road.PlaneRoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
 import com.github.rinde.rinsim.geom.Point;
@@ -40,7 +41,7 @@ public class Main {
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
-		run(2,7,4);
+		run(0,3,1);
 		
 //		// TODO voor simulaties:
 //		for (int i = 0; i < 50000; ++i) {
@@ -73,6 +74,7 @@ public class Main {
 	        // add a PlaneRoadModel, a model which facilitates the moving of
 	        // RoadUsers on a plane.
 	        .addModel(roadModel)
+	        .addModel(CommModel.builder().build()) // TODO mag dit altijd ?
 	        .build();
 	    
 	    final RandomGenerator rng = sim.getRandomGenerator();
@@ -102,7 +104,11 @@ public class Main {
 
 		    }
 	    } else if (modus == 1) {
-	    	// TODO contract net fire fighters
+	    	for (int i = 0; i < numFireFighters; i++) {
+
+		    	sim.register(new ContractFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), rng));
+
+		    }
 	    } else if (modus == 2) {
 	    	for(int i = 0; i < numFireFighters; i++){
 	    		//sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));

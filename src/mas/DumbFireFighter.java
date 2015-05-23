@@ -2,6 +2,8 @@ package mas;
 
 import java.util.Collection;
 
+import mas.ContractFireFighter.ContractTaskReport;
+
 import org.apache.commons.math3.random.RandomGenerator;
 
 import com.github.rinde.rinsim.core.TimeLapse;
@@ -54,6 +56,12 @@ public class DumbFireFighter extends FireFighter {
 	
 	@Override
 	public void afterTick(TimeLapse timeLapse) {
+		if (target != null && !roadModel.containsObject(target)) {
+			// it's extinguished!
+			target = null;
+        	countDown = EXT_TIME;
+        	return;
+		}
 		if (roadModel.equalPosition(this, target)) {
 			--countDown;
 			if (countDown == 0) {
