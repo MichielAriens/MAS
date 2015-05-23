@@ -41,7 +41,7 @@ public class Main {
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
-		run(0,3,1);
+		run(2,5,20,1);
 		
 //		// TODO voor simulaties:
 //		for (int i = 0; i < 50000; ++i) {
@@ -58,7 +58,7 @@ public class Main {
 //		// TODO uiteraard nog resultaten bijhouden en GUI weglaten voor simulaties
 	}
 
-	public static void run(int modus, int numFireFighters, long seed) {
+	public static void run(int modus, int numFireFighters, int numFires, long seed) {
 		roadModel = PlaneRoadModel.builder()
 		        .setMinPoint(MIN_POINT)
 		        .setMaxPoint(MAX_POINT)
@@ -80,21 +80,16 @@ public class Main {
 	    final RandomGenerator rng = sim.getRandomGenerator();
 	    
 	    // fire
-	    // TODO nu zijn alle simulaties 2 vuurhaardjes van 1 cell -> ook variatie inbrengen?
-	    Point p;
-	    Point q;
-	    do {
-	    	p = roadModel.getRandomPosition(rng);
-	    	
-	    	System.out.println(p);
-	    } while (!isPointInBoundary(p)); // boundaries can't get on fire
-	    do {
-	    	q = roadModel.getRandomPosition(rng);
-	    } while (!isPointInBoundary(q));
-	    p = new Point((int)p.x, (int)p.y);
-	    q = new Point((int)q.x, (int)q.y);
-	    roadModel.addObjectAt(new Fire(p, roadModel, rng), p);
-	    roadModel.addObjectAt(new Fire(q, roadModel, rng), q);
+	    for(int i = 0; i < numFires; i++){
+	    	Point p;
+	    	do {
+		    	p = roadModel.getRandomPosition(rng);
+		    	
+		    	System.out.println(p);
+		    } while (!isPointInBoundary(p)); // boundaries can't get on fire
+		    p = new Point((int)p.x, (int)p.y);
+		    roadModel.addObjectAt(new Fire(p, roadModel, rng), p);
+	    }
 	    
 	    // fire fighters
 	    if (modus == 0) {
@@ -112,12 +107,12 @@ public class Main {
 	    } else if (modus == 2) {
 	    	for(int i = 0; i < numFireFighters; i++){
 	    		//sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));
-	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), rng));
+	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(3,3, roadModel), rng));	    	
 	    	} 
 	    }
 	    
 	    // refill stations
-	    sim.register(new RefillStation(new Point(7,0)));
+	    //sim.register(new RefillStation(new Point(7,0)));
 	    sim.register(new RefillStation(new Point(20, 7)));
 	    
 	    sim.addTickListener(new TickListener() {

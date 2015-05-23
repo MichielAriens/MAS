@@ -11,12 +11,16 @@ import com.github.rinde.rinsim.geom.Point;
 
 public class AntFireFighter extends FireFighter{
 	
+	private Point returnTo = null;
+	private AntPheromone lastPlacedPheromone = null;
+	
+	
 	private enum State{
 		LOOKING_FOR_FIRE,
 		LOOKING_FOR_WATER,
 		FOUND_FIRE,
 		FOUND_WATER,
-		
+		TRACING, 
 	}
 	
 	private State state;
@@ -33,9 +37,9 @@ public class AntFireFighter extends FireFighter{
 		
 		if(state == state.LOOKING_FOR_FIRE || state == state.FOUND_FIRE){
 			resolveTargetWandering(timeLapse);
-		}if(state == state.LOOKING_FOR_WATER || state == state.FOUND_WATER){
+		}else if(state == state.LOOKING_FOR_WATER || state == state.FOUND_WATER){
 			resolveTargetLookingForWater(timeLapse);
-		}
+		}else if(state == )
 		
 		
 		move(timeLapse);
@@ -49,7 +53,10 @@ public class AntFireFighter extends FireFighter{
 				state = State.FOUND_WATER;
 			}
 		}else{
-			if(target == null || target instanceof DummyRoadUser){
+			//if(returnTo != null){
+			//	state = State.TRACING;
+			//}
+			else if(target == null || target instanceof DummyRoadUser){
 				state = State.LOOKING_FOR_FIRE;
 			}else{
 				state = State.FOUND_FIRE;
@@ -58,8 +65,15 @@ public class AntFireFighter extends FireFighter{
 	}
 
 	private void move(TimeLapse timeLapse) {
+		if(returnTo != null){
+			roadModel.moveTo(this, returnTo, timeLapse);
+		}
 		if(target != null){
-			roadModel.moveTo(this, target, timeLapse);
+			if(roadModel.containsObject(target)){
+				roadModel.moveTo(this, roadModel.getPosition(target), timeLapse);
+			}else{
+				target = null;
+			}
 		}
 	}
 
@@ -93,6 +107,26 @@ public class AntFireFighter extends FireFighter{
 			roadModel.addObjectAt(target, roadModel.getRandomPosition(rnd));
 		}
 	}
+	
+	@Override
+	public void afterTick(TimeLapse timeLapse) {
+		if (roadModel.equalPosition(this, target)) {
+			--countDown;
+			if (countDown == 0) {
+				if(target instanceof RefillStation){
+					emptyTank = false;
+				}
+				if(target instanceof DummyRoadUser){
+					roadModel.removeObject(target);
+				}
+				if(target instanceof Fire){
+					((Fire)target).extinguish();
+					emptyTank = true;
+				}
+	        	target = null;
+	        	countDown = EXT_TIME;
+			}
+        } 
 
 
 }

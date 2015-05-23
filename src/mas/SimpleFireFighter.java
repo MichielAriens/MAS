@@ -59,7 +59,11 @@ public class SimpleFireFighter extends FireFighter{
 
 	private void move(TimeLapse timeLapse) {
 		if(target != null){
-			roadModel.moveTo(this, target, timeLapse);
+			if(roadModel.containsObject(target)){
+				roadModel.moveTo(this, roadModel.getPosition(target), timeLapse);
+			}else{
+				target = null;
+			}
 		}
 	}
 
