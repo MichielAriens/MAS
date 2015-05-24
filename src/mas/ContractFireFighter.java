@@ -2,12 +2,9 @@ package mas;
 
 import java.util.Collection;
 import java.util.EmptyStackException;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -28,6 +25,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	private double reliability = 1; // CHOICE kan dit veranderen?
 	private Set<Fire> tasks;
 	private long lastAnnouncementTime;
+	private List<Message> taskAnnouncements;
 	private Stack<Message> awardedContracts;
 	private Message targetContract;
 	// kan rol van manager en contractor hebben
@@ -39,11 +37,11 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		tasks = new HashSet<>();
 		lastAnnouncementTime = -9999999;
 		awardedContracts = new Stack<>();
+		taskAnnouncements = new LinkedList<>();
 	}
 
 	@Override
 	public void tick(TimeLapse timeLapse) {
-		
 		// we always look around for fire
 		Collection<Fire> closeFire = RoadModels.findObjectsWithinRadius(roadModel.getPosition(this), 
 					roadModel, los.getVisionRadius(), Fire.class);
@@ -58,6 +56,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				taskPoints.add(f.getPosition());
 			}
 			device.broadcast(new ContractTaskAnnouncement(taskPoints, lastAnnouncementTime + 100000));
+//			device.send(new ContractTaskAnnouncement(taskPoints, lastAnnouncementTime + 100000), this);
 		}
 		
 		// we listen for broadcasts as well
@@ -67,7 +66,10 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 			List<Message> messages = device.getUnreadMessages();
 			for (Message m : messages) {
 				if (target==null && m.getContents().getClass() == ContractTaskAnnouncement.class) {
-					contractsToPickFrom.add(m);
+					if (target == null)
+						contractsToPickFrom.add(m);
+					else
+						taskAnnouncements.add(m);
 				} else if (m.getContents().getClass() == ContractTaskBid.class) {
 					// CHOICE we awarden onmiddellijk om geen tijd te verliezen, we houden dus geen bids bij in de hoop
 					// een betere te krijgen
@@ -81,8 +83,15 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 						tasks.remove(report.task);
 				}
 			}
-			if (target == null && !contractsToPickFrom.isEmpty())
-				selectBestAndBid(contractsToPickFrom); // CHOICE bid on only 1 /vs more
+			if (target == null) {
+				if (!contractsToPickFrom.isEmpty())
+					selectBestAndBid(contractsToPickFrom, timeLapse.getEndTime()); // CHOICE bid on only 1 /vs more
+				else if (!taskAnnouncements.isEmpty()) { // bidding on old announcements
+					selectBestAndBid(taskAnnouncements, timeLapse.getEndTime());
+					taskAnnouncements.clear();
+				}
+			}
+				
 			
 			if (!bidsToPickFrom.isEmpty())
 				selectBestAndAward(bidsToPickFrom);
@@ -131,7 +140,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				}
 			}
 			else { 
-				// patrouilling TODO less random patrouilling
+				// patrolling TODO less random patrolling
 				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
 			}
 		}
@@ -185,25 +194,58 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	 * @pre MessageContent in contracts is of type ContractTaskAnnouncement
 	 * @param contracts
 	 */
-	private void selectBestAndBid(List<Message> bundledContracts) {
+	private void selectBestAndBid(List<Message> bundledContracts, long time) {
+		System.out.println(this + " is going to bid");
 		List<Tuple<Point,Message>> bestPerBundle = new LinkedList<>();
 		
 		for (Message m : bundledContracts) {
+			// we only bid if the expirationtime isn't expired
+			if (((ContractTaskAnnouncement)m.getContents()).expirationTime < time)
+				continue;
 			bestPerBundle.add(new Tuple<Point, Message>(selectBestFromContractBundle(m), m));
 		}
+		
+		// TODO is it possible to select a task in such a way that when another agv has the same task, it will always
+		// select it from the same manager if possible ?
+		
+		// sorteren zodat ze in ieder FF hetzelfde staan, als 2 FF's dan op dezelfde bidden
+		// komt dit ook bij dezelfde manager aan -> efficienter
+		// Denk dat dan alleen nodig hetzelfde punt gekozen kan worden als ze ieder manager van elkaar zijn
+		// in de tekst: "to reduce the chance of bidding on the same task with a different manager ..."
+//		sort(bestPerBundle);
+		//die logica hierboven klopt niet helaas
 		
 		Tuple<Point, Message> bestContract = bestPerBundle.get(0);
 		Point myPosition = roadModel.getPosition(this);
 		for (Tuple<Point, Message> t : bestPerBundle) {
+			System.out.println("P: " + t.point + "; sender: " + t.message.getSender());
 			if (Point.distance(bestContract.point, myPosition) > Point.distance(t.point, myPosition))
 				bestContract = t;
 		}
+		
+		System.out.println(this + " is going to bid for " + bestContract.point + " which is a task of " + bestContract.message.getSender());
 		
 		// bid on best contract
 		if (los.canComm(this, (ContractFireFighter)bestContract.message.getSender()))
 			device.send(new ContractTaskBid(bestContract.point, myPosition), bestContract.message.getSender());
 	}
 	
+//	private void sort(List<Tuple<Point, Message>> bestPerBundle) {
+//		for (int i = 0; i < bestPerBundle.size(); ++i) {
+//			for (int j = i+1; j < bestPerBundle.size(); ++j) {
+//				System.out.println(bestPerBundle.get(i).message.getSender().toString());
+//				if (bestPerBundle.get(i).message.getSender().toString().compareTo(bestPerBundle.get(j).message.getSender().toString()) > 0) {
+//					Tuple<Point,Message> tuple = bestPerBundle.get(i);
+//					Tuple<Point,Message> tuple2 = bestPerBundle.get(j);
+//					bestPerBundle.remove(tuple);
+//					bestPerBundle.remove(tuple2);
+//					bestPerBundle.add(i, tuple2);
+//					bestPerBundle.add(j, tuple);
+//				}
+//			}
+//		}
+//	}
+
 	private Point selectBestFromContractBundle(Message m) {
 		Set<Point> taskPoints = ((ContractTaskAnnouncement)m.getContents()).taskAbstraction;
 		Point bestPoint = null;
@@ -313,7 +355,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	// identified by the combination of the point of fire and the message sender
 	public class ContractTaskAnnouncement implements MessageContents {
 		//public final Point elegibilityRange; // don't think this is necessary
-		public final Set<Point> taskAbstraction; // the point where the fire is
+		public final Set<Point> taskAbstraction; // the points where the fire is
 		//public final Point bidSpecification; // as bid we expect a point, but i don't think it's necessary to express this here
 		public final long expirationTime; // deadline for sending bids
 		

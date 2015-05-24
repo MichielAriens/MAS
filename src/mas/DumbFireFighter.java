@@ -47,7 +47,7 @@ public class DumbFireFighter extends FireFighter {
 			if (target != null) 
 				roadModel.moveTo(this, target, timeLapse);
 			else { 
-				// patrouilling TODO less random patrouilling
+				// patrolling TODO less random patrolling
 				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
 			}
 		}

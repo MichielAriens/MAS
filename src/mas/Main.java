@@ -2,6 +2,7 @@ package mas;
 
 import java.util.Set;
 
+import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.eclipse.swt.graphics.RGB;
 
@@ -41,7 +42,9 @@ public class Main {
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
+
 		run(2,4,3,2);
+
 		
 //		// TODO voor simulaties:
 //		for (int i = 0; i < 50000; ++i) {
@@ -78,6 +81,10 @@ public class Main {
 	        .build();
 	    
 	    final RandomGenerator rng = sim.getRandomGenerator();
+	    final RandomGenerator agvRng = new MersenneTwister(123); 
+	    // the second generator is used by agv's, 
+	    //we need a different one because we don't want the type of agv 
+	    //and its usage of the random generator to interfere with the behaviour of the environment (eg spreading fire)
 	    
 	    // fire
 	    for(int i = 0; i < numFires; i++){
@@ -95,19 +102,21 @@ public class Main {
 	    if (modus == 0) {
 		    for (int i = 0; i < numFireFighters; i++) {
 
-		    	sim.register(new DumbFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), rng));
+		    	sim.register(new DumbFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), agvRng));
 
 		    }
 	    } else if (modus == 1) {
 	    	for (int i = 0; i < numFireFighters; i++) {
 
-		    	sim.register(new ContractFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), rng));
+		    	sim.register(new ContractFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), agvRng));
 
 		    }
 	    } else if (modus == 2) {
 	    	for(int i = 0; i < numFireFighters; i++){
+
 	    		//sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));
 	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5, roadModel), rng));	    	
+
 	    	} 
 	    }
 	    
