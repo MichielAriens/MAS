@@ -44,6 +44,7 @@ public class Main {
 		//run(0,1,123L);
 
 		run(2,4,3,2);
+		//run(2,1,2,2);
 
 		
 //		// TODO voor simulaties:

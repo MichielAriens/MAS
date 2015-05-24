@@ -9,6 +9,12 @@ import com.github.rinde.rinsim.core.TimeLapse;
 import com.github.rinde.rinsim.core.model.road.RoadModels;
 import com.github.rinde.rinsim.core.model.road.RoadUser;
 import com.github.rinde.rinsim.geom.Point;
+/**
+ * pre
+ * @author Michiel
+ *
+ */
+
 
 public class AntFireFighter extends FireFighter{
 	
@@ -16,6 +22,8 @@ public class AntFireFighter extends FireFighter{
 	
 	private DummyRoadUser returnTo = null;
 	private AntPheromone lastPlacedPheromone = null;
+	private boolean gaveUpOnPheromone = false;
+	private boolean stuck;
 	
 	
 	private enum State{
@@ -37,6 +45,7 @@ public class AntFireFighter extends FireFighter{
 	public void tick(TimeLapse timeLapse) {
 		checkState(timeLapse);
 		System.out.println(state);
+		System.out.println(gaveUpOnPheromone);
 		
 		if(state == state.LOOKING_FOR_FIRE || state == state.FOUND_FIRE){
 			resolveTargetWandering(timeLapse);
@@ -97,28 +106,39 @@ public class AntFireFighter extends FireFighter{
 			target = newT;
 		}
 		//if nothing found try using pheromones
-		if(target == null){
-			List<AntPheromone> pheroms = RoadModels.findClosestObjects(roadModel.getPosition(this), roadModel, AntPheromone.class, 3);
+		if(target == null && !gaveUpOnPheromone){
+			List<AntPheromone> pheroms = RoadModels.findClosestObjects(roadModel.getPosition(this), roadModel, AntPheromone.class, 10);
 			if(pheroms.isEmpty()){
 				//nothing
-			}else if(pheroms.size() == 1){
-				if(this.los.canSee(this, pheroms.get(0))){
-					target = pheroms.get(0);
-				}
 			}else{
-				AntPheromone best = null;
-				for(AntPheromone p : pheroms){
-					if(!this.los.canSee(this, p)){
-						break;
+				if(roadModel.equalPosition(this, pheroms.get(0))){
+					if(stuck){
+						gaveUpOnPheromone = true;
 					}
-					if(best == null){
-						best = p;
-					}else if(p.getTimeToLive() > best.getTimeToLive()){
-						best = p;
+					stuck = true;
+				}else{
+					stuck = false;
+					if(pheroms.size() == 1){
+						if(this.los.canSee(this, pheroms.get(0))){
+							target = pheroms.get(0);
+						}
+					}else{
+						AntPheromone best = null;
+						for(AntPheromone p : pheroms){
+							if(!this.los.canSee(this, p)){
+								break;
+							}
+							if(best == null){
+								best = p;
+							}else if(p.getTimeToLive() > best.getTimeToLive()){
+								best = p;
+							}
+						}
+						target = best;
 					}
 				}
-				target = best;
 			}
+			
 		}
 		//if still nothing randomly wander.
 		if(target == null){
@@ -182,6 +202,7 @@ public class AntFireFighter extends FireFighter{
 					emptyTank = true;
 				}
 	        	target = null;
+	        	gaveUpOnPheromone = false;
 	        	countDown = EXT_TIME;
 			}
         } 
