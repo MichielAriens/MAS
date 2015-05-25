@@ -12,6 +12,7 @@ import com.github.rinde.rinsim.core.TimeLapse;
 import com.github.rinde.rinsim.core.model.comm.CommModel;
 import com.github.rinde.rinsim.core.model.road.PlaneRoadModel;
 import com.github.rinde.rinsim.core.model.road.RoadModel;
+import com.github.rinde.rinsim.core.model.road.RoadModels;
 import com.github.rinde.rinsim.geom.Point;
 import com.github.rinde.rinsim.ui.View;
 import com.github.rinde.rinsim.ui.renderers.PlaneRoadModelRenderer;
@@ -43,7 +44,7 @@ public class Main {
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
 
-		run(1,3,2,3);
+		run(2,10,2,2);
 		//run(2,1,2,2);
 
 		
@@ -99,6 +100,13 @@ public class Main {
 		    roadModel.addObjectAt(new Fire(p, roadModel, rng), p);
 	    }
 	    
+	    
+	    
+	    // refill stations
+	    //sim.register(new RefillStation(new Point(7,0)));
+	    Point refilPoint = new Point(20,7);
+	    sim.register(new RefillStation(refilPoint));
+	    
 	    // fire fighters
 	    if (modus == 0) {
 		    for (int i = 0; i < numFireFighters; i++) {
@@ -113,17 +121,29 @@ public class Main {
 
 		    }
 	    } else if (modus == 2) {
+	    	//Build the grid
+	    	for(int x = 0; x <= MAX_POINT.x; x++){
+    			for(int y = 0; y <= MAX_POINT.y; y++){
+    				sim.register(new PheromoneNode(new Point(x, y), rng));
+    			}
+    		}
+	    	for(PheromoneNode n : roadModel.getObjectsOfType(PheromoneNode.class)){
+	    		for(PheromoneNode other : RoadModels.findClosestObjects(n.getPosition(), roadModel, PheromoneNode.class, 8)){
+	    			if(!(n.equals(other)) && Point.distance(n.getPosition(), other.getPosition()) <= Math.sqrt(2) + 0.001 ){
+	    				n.addEdge(new PheromoneEdge(n, other));
+	    			}
+	    		}
+	    	}
+	    	
+	    	
+	    
 	    	for(int i = 0; i < numFireFighters; i++){
-
-	    		//sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));
-	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(10,10, roadModel), rng));	    	
+	    		PheromoneNode start = RoadModels.findClosestObject(refilPoint, roadModel, PheromoneNode.class);
+	    		sim.register(new AntFireFighter(start, new SimpleLimitedLOS(5,5, roadModel), rng));	    	
+	    		//sim.register(new AntFireFighter(start, new FullLineOfSight(), rng));
 
 	    	} 
 	    }
-	    
-	    // refill stations
-	    //sim.register(new RefillStation(new Point(7,0)));
-	    sim.register(new RefillStation(new Point(20, 7)));
 	    
 	    sim.addTickListener(new TickListener() {
 	        @Override
@@ -170,6 +190,7 @@ public class Main {
 	    	            	        AntFireFighter.class, "/graphics/flat/bus-32.png")
 	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
 	    	           .addColorAssociation(AntPheromone.class, new RGB(0, 255, 0))
+	    	           .addColorAssociation(PheromoneNode.class, new RGB(200, 200, 200))
 	    	     );      
 	    viewBuilder.show();
 	    // in case a GUI is not desired, the simulation can simply be run by
@@ -178,6 +199,8 @@ public class Main {
 	
 	
 	
+
+
 	private static boolean isPointInBoundary(Point p) {
 		return p.x > MIN_POINT.x+0.5 && p.x < MAX_POINT.x-0.5 && p.y > MIN_POINT.y+0.5 && p.y < MAX_POINT.y-0.5;
     }
