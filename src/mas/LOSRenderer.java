@@ -16,14 +16,14 @@ import com.github.rinde.rinsim.ui.renderers.ViewPort;
 import com.github.rinde.rinsim.ui.renderers.ViewRect;
 import com.google.common.base.Optional;
 
-public class PheromoneRenderer implements ModelRenderer {
+public class LOSRenderer implements ModelRenderer {
 
 	private static final float OFFSET = 0.2f; 
 
 	Optional<RoadModel> rm;
 	Optional<DefaultPDPModel> pm;
 
-	PheromoneRenderer() {
+	LOSRenderer() {
 		rm = Optional.absent();
 		pm = Optional.absent();
 	}
@@ -43,30 +43,34 @@ public class PheromoneRenderer implements ModelRenderer {
 
 	@Override
 	public void renderDynamic(GC gc, ViewPort vp, long time) {
-		final Set<PheromoneNode> pheroms = rm.get().getObjectsOfType(PheromoneNode.class);
-		synchronized (pheroms) {
-			Set<PheromoneEdge> edges = new HashSet<>();
-			for(PheromoneNode n : pheroms){
-				edges.addAll(n.allEdges());
-			}
-			for(final PheromoneEdge e : edges){
-				final Point p = e.getPointAllong(OFFSET);
+		final Set<FireFighter> fighters = rm.get().getObjectsOfType(FireFighter.class);
+		synchronized (fighters) {
+			for(final FireFighter e : fighters){
+				final Point p = rm.get().getPosition(e);
 				final int x = vp.toCoordX(p.x);// - 5;
 				final int y = vp.toCoordY(p.y);// - 30;
-
-				String text = e.getPheromone();
-				System.out.println(text);
+				double radd = e.los.getCommunicationRadius();
+				Point temp = new Point(radd, 0);
+				int rad = vp.toCoordX(temp.x) / 2;
 				
-				final org.eclipse.swt.graphics.Point extent = gc.textExtent(text);
+				
+				
+				//System.out.println(text);
+				
+				//final org.eclipse.swt.graphics.Point extent = gc.textExtent(text);
 				//gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_DARK_BLUE));
 				//gc.setBackground(new Color(gc.getDevice(), arg1, arg2, arg3));
 				//gc.fillRoundRectangle(x - (extent.x / 2), y - (extent.y / 2), extent.x + 2, extent.y + 2, 5, 5);
 				//gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
 				gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
 
-				gc.drawText(text, x - (extent.x / 2) + 1, y - (extent.y / 2) + 1, true);
+				//gc.drawText(text, x - (extent.x / 2) + 1, y - (extent.y / 2) + 1, true);
 				
-				//gc.drawPoint(x - (extent.x / 2) + 1, y - (extent.y / 2) + 1);
+				gc.drawOval(vp.toCoordX(p.x - radd),
+					        vp.toCoordY(p.y - radd),
+					        vp.scale(radd * 2),
+					        vp.scale(radd * 2)
+				);
 			}
 
 

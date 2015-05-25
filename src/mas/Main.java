@@ -128,7 +128,7 @@ public class Main {
     			}
     		}
 	    	for(PheromoneNode n : roadModel.getObjectsOfType(PheromoneNode.class)){
-	    		for(PheromoneNode other : RoadModels.findClosestObjects(n.getPosition(), roadModel, PheromoneNode.class, 8)){
+	    		for(PheromoneNode other : RoadModels.findClosestObjects(n.getPosition(), roadModel, PheromoneNode.class, 16)){
 	    			if(!(n.equals(other)) && Point.distance(n.getPosition(), other.getPosition()) <= Math.sqrt(2) + 0.001 ){
 	    				n.addEdge(new PheromoneEdge(n, other));
 	    			}
@@ -139,7 +139,7 @@ public class Main {
 	    
 	    	for(int i = 0; i < numFireFighters; i++){
 	    		PheromoneNode start = RoadModels.findClosestObject(refilPoint, roadModel, PheromoneNode.class);
-	    		sim.register(new AntFireFighter(start, new SimpleLimitedLOS(5,5, roadModel), rng));	    	
+	    		sim.register(new AntFireFighter(start, new SimpleLimitedLOS(3,3, roadModel), rng));	    	
 	    		//sim.register(new AntFireFighter(start, new FullLineOfSight(), rng));
 
 	    	} 
@@ -191,7 +191,10 @@ public class Main {
 	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
 	    	           .addColorAssociation(AntPheromone.class, new RGB(0, 255, 0))
 	    	           .addColorAssociation(PheromoneNode.class, new RGB(200, 200, 200))
-	    	     );      
+	    	     )
+	    	     .with(new LOSRenderer())
+	    	     .with(new PheromoneRenderer())
+	    	     ;
 	    viewBuilder.show();
 	    // in case a GUI is not desired, the simulation can simply be run by
 	    // calling the start method of the simulator.
