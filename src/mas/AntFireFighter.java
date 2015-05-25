@@ -22,8 +22,10 @@ public class AntFireFighter extends FireFighter{
 	
 	private DummyRoadUser returnTo = null;
 	private AntPheromone lastPlacedPheromone = null;
+	
+	private AntPheromone lastFollowedPheromene = null;
 	private boolean gaveUpOnPheromone = false;
-	private boolean stuck;
+	private boolean followingPath = false;
 	
 	
 	private enum State{
@@ -105,41 +107,28 @@ public class AntFireFighter extends FireFighter{
 			}
 			target = newT;
 		}
+		
 		//if nothing found try using pheromones
 		if(target == null && !gaveUpOnPheromone){
-			List<AntPheromone> pheroms = RoadModels.findClosestObjects(roadModel.getPosition(this), roadModel, AntPheromone.class, 10);
-			if(pheroms.isEmpty()){
-				//nothing
-			}else{
-				if(roadModel.equalPosition(this, pheroms.get(0))){
-					if(stuck){
+			AntPheromone pherom = RoadModels.findClosestObject(roadModel.getPosition(this), roadModel, AntPheromone.class);
+			if(pherom != null && this.los.canSee(this, pherom)){
+				if(!followingPath){
+					target = pherom;
+					followingPath = true;
+				}else{
+					AntPheromone nextT = pherom;
+					while(nextT != null && this.los.canSee(this, nextT)){
+						nextT = nextT.getAChild();
+					}
+					if(target == null){
+						followingPath = false;
 						gaveUpOnPheromone = true;
 					}
-					stuck = true;
-				}else{
-					stuck = false;
-					if(pheroms.size() == 1){
-						if(this.los.canSee(this, pheroms.get(0))){
-							target = pheroms.get(0);
-						}
-					}else{
-						AntPheromone best = null;
-						for(AntPheromone p : pheroms){
-							if(!this.los.canSee(this, p)){
-								break;
-							}
-							if(best == null){
-								best = p;
-							}else if(p.getTimeToLive() > best.getTimeToLive()){
-								best = p;
-							}
-						}
-						target = best;
-					}
+					target = nextT;
 				}
 			}
-			
 		}
+		
 		//if still nothing randomly wander.
 		if(target == null){
 			target = new DummyRoadUser();
@@ -148,7 +137,7 @@ public class AntFireFighter extends FireFighter{
 	}
 	
 	private void resolveTargetLookingForWater(TimeLapse timeLapse) {
-		// First check for nearer fires.
+		// First check for nearer refill stations.
 		RefillStation newT = RoadModels.findClosestObject(roadModel.getPosition(this), roadModel, RefillStation.class);
 		if(los.canSee(this, newT)){
 			if(target instanceof DummyRoadUser){
@@ -157,6 +146,29 @@ public class AntFireFighter extends FireFighter{
 			target = newT;
 			refillStation = newT;
 		}
+		
+		//if nothing found try using pheromones
+		if(target == null && !gaveUpOnPheromone){
+			AntPheromone pherom = RoadModels.findClosestObject(roadModel.getPosition(this), roadModel, AntPheromone.class);
+			if(pherom != null && this.los.canSee(this, pherom)){
+				if(!followingPath){
+					target = pherom;
+					followingPath = true;
+				}else{
+					AntPheromone nextT = pherom;
+					while(nextT != null && this.los.canSee(this, nextT)){
+						nextT = nextT.getParent();
+					}
+					if(target == null){
+						followingPath = false;
+						gaveUpOnPheromone = true;
+					}
+					target = nextT;
+				}
+			}
+		}
+		
+		//if nothing found just wander
 		if(target == null){
 			target = new DummyRoadUser();
 			roadModel.addObjectAt(target, roadModel.getRandomPosition(rnd));
@@ -173,13 +185,14 @@ public class AntFireFighter extends FireFighter{
 				|| 
 				(roadModel.containsObject(lastPlacedPheromone)
 						&& Point.distance(pos, roadModel.getPosition(this.lastPlacedPheromone)) >= PHEROMONE_DISTANCE)){
-			lastPlacedPheromone = new AntPheromone(pos);
-			//roadModel.addObjectAt(lastPlacedPheromone, pos);
+			AntPheromone nextPherom = new AntPheromone(pos, rnd);
+			if(lastFollowedPheromene != null){
+				lastPlacedPheromone.addChild(nextPherom);
+			}
+			lastPlacedPheromone = nextPherom;
 			roadModel.register(lastPlacedPheromone);
-			//roadModel.
 		}
 		target = returnTo;
-		
 	}
 
 	@Override
@@ -191,6 +204,7 @@ public class AntFireFighter extends FireFighter{
 			if (countDown == 0) {
 				if(target instanceof RefillStation){
 					emptyTank = false;
+					gaveUpOnPheromone = false;
 				}
 				if(target instanceof DummyRoadUser){
 					roadModel.removeObject(target);
@@ -200,9 +214,10 @@ public class AntFireFighter extends FireFighter{
 					roadModel.addObjectAtSamePosition(returnTo, target);
 					((Fire)target).extinguish();
 					emptyTank = true;
+					lastPlacedPheromone = null;
+					gaveUpOnPheromone = false;
 				}
 	        	target = null;
-	        	gaveUpOnPheromone = false;
 	        	countDown = EXT_TIME;
 			}
         } 

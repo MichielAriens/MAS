@@ -58,8 +58,10 @@ public class AntPheromone implements RoadUser, TickListener{
 	}
 	
 	public void addChild(AntPheromone child){
-		this.children.add(child);
-		child.parent = this;
+		if(child != null){
+			this.children.add(child);
+			child.parent = this;
+		}
 	}
 	
 	public AntPheromone getParent(){
@@ -79,6 +81,10 @@ public class AntPheromone implements RoadUser, TickListener{
 	 * @return
 	 */
 	public AntPheromone getAChild(){
+		if(children.isEmpty()){
+			return null;
+		}
+		
 		long[] weights = new long[children.size()];
 		int i = 0;
 		for(AntPheromone p : this.children){

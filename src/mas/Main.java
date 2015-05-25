@@ -43,7 +43,7 @@ public class Main {
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
 
-		run(2,4,3,2);
+		run(1,3,2,3);
 		//run(2,1,2,2);
 
 		
@@ -116,7 +116,7 @@ public class Main {
 	    	for(int i = 0; i < numFireFighters; i++){
 
 	    		//sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5,roadModel), rng));
-	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(5,5, roadModel), rng));	    	
+	    		sim.register(new AntFireFighter(roadModel.getRandomPosition(rng), new SimpleLimitedLOS(10,10, roadModel), rng));	    	
 
 	    	} 
 	    }
