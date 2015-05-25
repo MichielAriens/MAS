@@ -141,7 +141,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 			}
 			else { 
 				// patrolling TODO less random patrolling
-				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
+//				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
+				patrolLR(timeLapse);
 			}
 		}
 	}
@@ -195,7 +196,6 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	 * @param contracts
 	 */
 	private void selectBestAndBid(List<Message> bundledContracts, long time) {
-		System.out.println(this + " is going to bid");
 		List<Tuple<Point,Message>> bestPerBundle = new LinkedList<>();
 		
 		for (Message m : bundledContracts) {
@@ -218,13 +218,10 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		Tuple<Point, Message> bestContract = bestPerBundle.get(0);
 		Point myPosition = roadModel.getPosition(this);
 		for (Tuple<Point, Message> t : bestPerBundle) {
-			System.out.println("P: " + t.point + "; sender: " + t.message.getSender());
 			if (Point.distance(bestContract.point, myPosition) > Point.distance(t.point, myPosition))
 				bestContract = t;
 		}
-		
-		System.out.println(this + " is going to bid for " + bestContract.point + " which is a task of " + bestContract.message.getSender());
-		
+			
 		// bid on best contract
 		if (los.canComm(this, (ContractFireFighter)bestContract.message.getSender()))
 			device.send(new ContractTaskBid(bestContract.point, myPosition), bestContract.message.getSender());

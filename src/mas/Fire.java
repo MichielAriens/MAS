@@ -11,7 +11,7 @@ import com.github.rinde.rinsim.geom.Point;
 
 public class Fire extends FireStatus {
 	
-	private static final double FIRE_SPREAD_CHANCE = .0115;
+	public static final double FIRE_SPREAD_CHANCE = .0115;
 	
 	
 	public Fire(Point pos, RoadModel model, RandomGenerator rnd) {

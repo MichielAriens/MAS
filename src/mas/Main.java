@@ -1,5 +1,8 @@
 package mas;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
 import org.apache.commons.math3.random.MersenneTwister;
@@ -26,6 +29,12 @@ public class Main {
 	static Point MIN_POINT; // lefttop
 	static Point MAX_POINT; // rightbottom
 	private static RoadModel roadModel;
+	private static int failureThreshold;
+	private static int modus;
+	private static int numFireFighters;
+	private static int numFires;
+	private static long seed;
+	private static PrintWriter writer;
 	
 	public Main(Point minp, Point maxp) {
 		MIN_POINT = minp;
@@ -39,29 +48,53 @@ public class Main {
 	public static void main(String[] args) {
 		MIN_POINT = new Point(0,0);//minp;
 		MAX_POINT = new Point(20,12);//maxp;
+		failureThreshold = (int) ((MAX_POINT.x - MIN_POINT.x) * (MAX_POINT.y - MIN_POINT.y)) / 2;
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
 
-		run(2,4,3,2);
-
+		//run(0,2,2,1);
+//		run(0,1,2,8);
 		
-//		// TODO voor simulaties:
-//		for (int i = 0; i < 50000; ++i) {
-//			// dit test 3 communicatiemodellen in zelfde situatie:
-//			run(0,1,i);
-//			run(1,1,i);
-//			run(2,1,i);
-//			
-//			// dit doet dat ook maar dan met 2 fire fighters
-//			run(0,2,i);
-//			run(1,2,i);
-//			run(2,2,i);
-//		}
-//		// TODO uiteraard nog resultaten bijhouden en GUI weglaten voor simulaties
+		try {
+			writer = new PrintWriter("fullLOS.csv", "UTF-8");
+			writer.println("speed=" + FireFighter.SPEED);
+			writer.println("extinguishingtime=" + FireFighter.EXT_TIME);
+			writer.println("firespreadchance=" + Fire.FIRE_SPREAD_CHANCE);
+			writer.println("modus0=DumbFireFighter");
+			writer.println("modus1=ContractFireFighter");
+			writer.println("lineofsight=FullLineOfSight");
+			writer.println("modus,numFireFighters,numFires,seed,amountOfTicks");
+		
+	//		// TODO voor simulaties:
+			for (int i = 0; i < 5000; ++i) { // seed
+				for (int j = 1; j < 6; ++j) { // fire fighters
+					for (int k = 1; k < 6; ++k) { // fires
+						// dit test 3 communicatiemodellen in zelfde situatie:
+						run(0,j,k,i);
+						run(1,j,k,i);
+	//					run(2,j,k,i);
+					}
+				}
+				System.out.println(i + "/5000");
+			}
+		} catch (FileNotFoundException e) {
+		} catch (UnsupportedEncodingException e) {
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			writer.write(ex.getMessage());
+		} finally {
+			writer.close();
+		}
+		// TODO resultaten bijhouden
+		// TODO LOS ook als variabele
 	}
 
 	public static void run(int modus, int numFireFighters, int numFires, long seed) {
+		Main.modus = modus;
+		Main.numFireFighters = numFireFighters;
+		Main.numFires = numFires;
+		Main.seed = seed;
 		roadModel = PlaneRoadModel.builder()
 		        .setMinPoint(MIN_POINT)
 		        .setMaxPoint(MAX_POINT)
@@ -72,12 +105,11 @@ public class Main {
 	        .setTickLength(10000L)
 	        // set the random seed we use in this 'experiment'
 	        // -> Sequences of values generated starting with the same seeds should be identical.
-	        // => TODO seed gebruiken om zelfde situatie voor verschillende communicatiemodellen te evalueren
 	        .setRandomSeed(seed)
 	        // add a PlaneRoadModel, a model which facilitates the moving of
 	        // RoadUsers on a plane.
 	        .addModel(roadModel)
-	        .addModel(CommModel.builder().build()) // TODO mag dit altijd ?
+	        .addModel(CommModel.builder().build())
 	        .build();
 	    
 	    final RandomGenerator rng = sim.getRandomGenerator();
@@ -92,9 +124,9 @@ public class Main {
 	    	do {
 		    	p = roadModel.getRandomPosition(rng);
 		    	
-		    	System.out.println(p);
+//		    	System.out.println(p);
 		    } while (!isPointInBoundary(p)); // boundaries can't get on fire
-		    p = new Point((int)p.x, (int)p.y);
+		    p = new Point(Math.round(p.x), Math.round(p.y));
 		    roadModel.addObjectAt(new Fire(p, roadModel, rng), p);
 	    }
 	    
@@ -121,7 +153,7 @@ public class Main {
 	    }
 	    
 	    // refill stations
-	    //sim.register(new RefillStation(new Point(7,0)));
+	    sim.register(new RefillStation(new Point(7,0)));
 	    sim.register(new RefillStation(new Point(20, 7)));
 	    
 	    sim.addTickListener(new TickListener() {
@@ -130,11 +162,16 @@ public class Main {
 	        	// Fire fighting successful
 	        	if (roadModel.getObjectsOfType(Fire.class).isEmpty()) {
 	        		// end simulation
-	        		System.out.println(sim.getCurrentTime());
+	        		writer.println(Main.modus + "," + Main.numFireFighters + "," + Main.numFires
+	        				+ "," + Main.seed + "," + sim.getCurrentTime()/10000);
 	        		sim.stop();
 	        	}
 	        	
-	        	// TODO uitzichtloze situatie stopzetten (bij groot percentage cellen on fire)
+	        	if (roadModel.getObjectsOfType(Fire.class).size() > failureThreshold) {
+	        		writer.println(Main.modus + "," + Main.numFireFighters + "," + Main.numFires
+	        				+ "," + Main.seed + "," + "unsuccesful");
+	        		sim.stop();
+	        	}
 	        	
 	        	
 	        	Set<FireStatus> cells = roadModel.getObjectsOfType(FireStatus.class);
@@ -155,24 +192,25 @@ public class Main {
 	        }
 	      });
 	    
-	    final View.Builder viewBuilder = View.create(sim)
-	            .with(PlaneRoadModelRenderer.create())
-	            .with(RoadUserRenderer.builder()
-	            	   .addImageAssociation(
-	            	                Fire.class, "/graphics/perspective/tall-building-64.png")
-	            			   		//Fire.class, "img/fire.png")
-	            			   		
-	            	   .addImageAssociation(
-	    	            	        Wet.class, "/graphics/flat/person-red-32.png")
-	            			   		//Wet.class, "img/wet.png"));
-	    	           .addImageAssociation(
-	    	            	        AntFireFighter.class, "/graphics/flat/bus-32.png")
-	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
-	    	           .addColorAssociation(AntPheromone.class, new RGB(0, 255, 0))
-	    	     );      
-	    viewBuilder.show();
+//	    final View.Builder viewBuilder = View.create(sim)
+//	            .with(PlaneRoadModelRenderer.create())
+//	            .with(RoadUserRenderer.builder()
+//	            	   .addImageAssociation(
+//	            	                Fire.class, "/graphics/perspective/tall-building-64.png")
+//	            			   		//Fire.class, "img/fire.png")
+//	            			   		
+//	            	   .addImageAssociation(
+//	    	            	        Wet.class, "/graphics/flat/person-red-32.png")
+//	            			   		//Wet.class, "img/wet.png"));
+//	    	           .addImageAssociation(
+//	    	            	        AntFireFighter.class, "/graphics/flat/bus-32.png")
+//	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
+//	    	           .addColorAssociation(AntPheromone.class, new RGB(0, 255, 0))
+//	    	     );      
+//	    viewBuilder.show();
 	    // in case a GUI is not desired, the simulation can simply be run by
 	    // calling the start method of the simulator.
+	    sim.start();
 	}
 	
 	
