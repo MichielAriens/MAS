@@ -49,7 +49,7 @@ public class Main {
 	public static void main(String[] args) {
 		MIN_POINT = new Point(0,0);//minp;
 		MAX_POINT = new Point(20,12);//maxp;
-		failureThreshold = (int) ((MAX_POINT.x - MIN_POINT.x) * (MAX_POINT.y - MIN_POINT.y)) / 2;
+		failureThreshold = (int) ((MAX_POINT.x - MIN_POINT.x) * (MAX_POINT.y - MIN_POINT.y)) / 4;
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
@@ -63,7 +63,7 @@ public class Main {
 //		run(0,1,2,8);
 		
 		try {
-			writer = new PrintWriter("fullLOS.csv", "UTF-8");
+			writer = new PrintWriter("fullLOS_25p.csv", "UTF-8");
 			writer.println("speed=" + FireFighter.SPEED);
 			writer.println("extinguishingtime=" + FireFighter.EXT_TIME);
 			writer.println("firespreadchance=" + Fire.FIRE_SPREAD_CHANCE);
@@ -142,7 +142,7 @@ public class Main {
 	    // refill stations
 	    //sim.register(new RefillStation(new Point(7,0)));
 	    Point refilPoint = new Point(20,7);
-	    sim.register(new RefillStation(refilPoint));
+//	    sim.register(new RefillStation(refilPoint));
 	    
 	    // fire fighters
 	    if (modus == 0) {
@@ -200,7 +200,7 @@ public class Main {
 	        	
 	        	if (roadModel.getObjectsOfType(Fire.class).size() > failureThreshold) {
 	        		writer.println(Main.modus + "," + Main.numFireFighters + "," + Main.numFires
-	        				+ "," + Main.seed + "," + "unsuccesful");
+	        				+ "," + Main.seed + "," + "unsuccessful");
 	        		sim.stop();
 	        	}
 	        	
@@ -224,26 +224,26 @@ public class Main {
 	      });
 	    
 
-	    final View.Builder viewBuilder = View.create(sim)
-	            .with(PlaneRoadModelRenderer.create())
-	            .with(RoadUserRenderer.builder()
-	            	   .addImageAssociation(
-	            	                Fire.class, "/graphics/perspective/tall-building-64.png")
-	            			   		//Fire.class, "img/fire.png")
-	            			   		
-	            	   .addImageAssociation(
-	    	            	        Wet.class, "/graphics/flat/person-red-32.png")
-	            			   		//Wet.class, "img/wet.png"));
-	    	           .addImageAssociation(
-	    	            	        AntFireFighter.class, "/graphics/flat/bus-32.png")
-	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
-	    	           .addColorAssociation(AntPheromone.class, new RGB(0, 255, 0))
-	    	           .addColorAssociation(PheromoneNode.class, new RGB(200, 200, 200))
-	    	     )
-	    	     .with(new LOSRenderer())
-	    	     .with(new PheromoneRenderer())
-	    	     ;
-	    viewBuilder.show();
+//	    final View.Builder viewBuilder = View.create(sim)
+//	            .with(PlaneRoadModelRenderer.create())
+//	            .with(RoadUserRenderer.builder()
+//	            	   .addImageAssociation(
+//	            	                Fire.class, "/graphics/perspective/tall-building-64.png")
+//	            			   		//Fire.class, "img/fire.png")
+//	            			   		
+//	            	   .addImageAssociation(
+//	    	            	        Wet.class, "/graphics/flat/person-red-32.png")
+//	            			   		//Wet.class, "img/wet.png"));
+//	    	           .addImageAssociation(
+//	    	            	        AntFireFighter.class, "/graphics/flat/bus-32.png")
+//	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
+//	    	           .addColorAssociation(AntPheromone.class, new RGB(0, 255, 0))
+//	    	           .addColorAssociation(PheromoneNode.class, new RGB(200, 200, 200))
+//	    	     )
+//	    	     .with(new LOSRenderer())
+//	    	     .with(new PheromoneRenderer())
+//	    	     ;
+//	    viewBuilder.show();
 
 	    // in case a GUI is not desired, the simulation can simply be run by
 	    // calling the start method of the simulator.
