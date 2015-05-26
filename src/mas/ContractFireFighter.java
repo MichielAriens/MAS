@@ -28,6 +28,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	private List<Message> taskAnnouncements;
 	private Stack<Message> awardedContracts;
 	private Message targetContract;
+	private Point targetPos;
 	// kan rol van manager en contractor hebben
 	// hou een lijst bij van plaatsen waar je weet dat vuur is; hiervoor kan je manager zijn
 	// task maar aan 1 contractor geven
@@ -55,7 +56,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 			for (Fire f : tasks) {
 				taskPoints.add(f.getPosition());
 			}
-			device.broadcast(new ContractTaskAnnouncement(taskPoints, lastAnnouncementTime + 100000));
+			if (!taskPoints.isEmpty())
+				device.broadcast(new ContractTaskAnnouncement(taskPoints, lastAnnouncementTime + 100000));
 //			device.send(new ContractTaskAnnouncement(taskPoints, lastAnnouncementTime + 100000), this);
 		}
 		
@@ -118,19 +120,21 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				try {
 					targetContract = awardedContracts.pop();
 					target = ((ContractTaskAward)targetContract.getContents()).task;
+					targetPos = ((ContractTaskAward)targetContract.getContents()).taskPos;
 				} catch (EmptyStackException ex) {}
 			}
 			
 			// let's move
 			if (target != null) {
 				// if we can see the target we check if it's still there
-				if (los.canSee(this, target)) {
+				if (los.getVisionRadius() >= Point.distance(roadModel.getPosition(this), targetPos)) {
 					if (!roadModel.containsObject(target)) {
 						
 						device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
 						try {
 							targetContract = awardedContracts.pop();
 							target = ((ContractTaskAward)targetContract.getContents()).task;
+							targetPos = ((ContractTaskAward)targetContract.getContents()).taskPos;
 						} catch (EmptyStackException ex) {}
 					}
 				}
@@ -140,7 +144,6 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				}
 			}
 			else { 
-				// patrolling TODO less random patrolling
 //				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
 				patrolLR(timeLapse);
 			}
@@ -193,6 +196,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	/**
 	 * @pre contracts.empty() == false
 	 * @pre MessageContent in contracts is of type ContractTaskAnnouncement
+	 * @pre each ContractTaskAnnouncement contains at least one task
 	 * @param contracts
 	 */
 	private void selectBestAndBid(List<Message> bundledContracts, long time) {
@@ -204,6 +208,9 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				continue;
 			bestPerBundle.add(new Tuple<Point, Message>(selectBestFromContractBundle(m), m));
 		}
+		
+		if (bestPerBundle.isEmpty())
+			return;
 		
 		// TODO is it possible to select a task in such a way that when another agv has the same task, it will always
 		// select it from the same manager if possible ?
@@ -218,7 +225,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		Tuple<Point, Message> bestContract = bestPerBundle.get(0);
 		Point myPosition = roadModel.getPosition(this);
 		for (Tuple<Point, Message> t : bestPerBundle) {
-			if (Point.distance(bestContract.point, myPosition) > Point.distance(t.point, myPosition))
+			if (Point.distance(bestContract.point, myPosition)
+					> Point.distance(t.point, myPosition))
 				bestContract = t;
 		}
 			
@@ -243,6 +251,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 //		}
 //	}
 
+	
 	private Point selectBestFromContractBundle(Message m) {
 		Set<Point> taskPoints = ((ContractTaskAnnouncement)m.getContents()).taskAbstraction;
 		Point bestPoint = null;
@@ -374,9 +383,11 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	
 	public class ContractTaskAward implements MessageContents {
 		public final Fire task;
+		public final Point taskPos;
 		
 		public ContractTaskAward(Fire fire) {
 			task = fire;
+			taskPos = fire.position;
 		}
 	}
 	
