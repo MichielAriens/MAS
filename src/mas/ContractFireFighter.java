@@ -29,6 +29,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 	private Stack<Message> awardedContracts;
 	private Message targetContract;
 	private Point targetPos;
+	private long lastTaskTime;
 	// kan rol van manager en contractor hebben
 	// hou een lijst bij van plaatsen waar je weet dat vuur is; hiervoor kan je manager zijn
 	// task maar aan 1 contractor geven
@@ -39,6 +40,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		lastAnnouncementTime = -9999999;
 		awardedContracts = new Stack<>();
 		taskAnnouncements = new LinkedList<>();
+		lastTaskTime = 0;
 	}
 
 	@Override
@@ -121,6 +123,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 					targetContract = awardedContracts.pop();
 					target = ((ContractTaskAward)targetContract.getContents()).task;
 					targetPos = ((ContractTaskAward)targetContract.getContents()).taskPos;
+					lastTaskTime = timeLapse.getStartTime();
 				} catch (EmptyStackException ex) {}
 			}
 			
@@ -130,11 +133,13 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 				if (los.getVisionRadius() >= Point.distance(roadModel.getPosition(this), targetPos)) {
 					if (!roadModel.containsObject(target)) {
 						
-						device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
+						if (targetContract != null)
+							device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
 						try {
 							targetContract = awardedContracts.pop();
 							target = ((ContractTaskAward)targetContract.getContents()).task;
 							targetPos = ((ContractTaskAward)targetContract.getContents()).taskPos;
+							lastTaskTime = timeLapse.getStartTime();
 						} catch (EmptyStackException ex) {}
 					}
 				}
@@ -143,7 +148,14 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 					roadModel.moveTo(this, ((Fire)target).position, timeLapse);
 				}
 			}
-			else { 
+			else { // target == null
+				if (timeLapse.getStartTime() - lastTaskTime > 1000000) {
+					if (!tasks.isEmpty()) {
+						target = tasks.iterator().next();
+						targetPos = ((Fire)target).getPosition();
+						lastTaskTime = timeLapse.getStartTime();
+					}
+				}		
 //				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
 				patrolLR(timeLapse);
 			}
@@ -155,7 +167,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 //		if (target != null && this.getPosition().equals(((Fire)target).position)) {  dit werkt blijkbaar niet
 		if (target != null && !roadModel.containsObject(target)) {
 			// it's extinguished!
-			device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
+			if (targetContract != null)
+				device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
 			target = null;
         	countDown = EXT_TIME;
         	return;
@@ -167,7 +180,8 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 					((Fire) target).extinguish();
 					emptyTank = true;
 				}
-				device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
+				if (targetContract != null)
+					device.send(new ContractTaskReport((Fire)target, true), targetContract.getSender());
 				target = null;
 	        	countDown = EXT_TIME;
 			}
