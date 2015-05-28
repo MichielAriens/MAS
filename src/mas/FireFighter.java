@@ -111,14 +111,17 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
 			}
 		}
 		if (patrolDir == PATROL_DIR.RIGHT) {
-			Point dest = new Point(roadModel.getBounds().get(1).x, roadModel.getPosition(this).y);
+			//Point dest = new Point(roadModel.getBounds().get(1).x, roadModel.getPosition(this).y);
+			Point dest = roadModel.getRandomPosition(rnd);
 			if (Point.distance(roadModel.getPosition(this), dest) < 1) {
 				if (Point.distance(roadModel.getPosition(this), 
 						new Point(roadModel.getBounds().get(1).x, roadModel.getBounds().get(1).y)) < 2.5){
-					dest = new Point(roadModel.getBounds().get(0).x +1, roadModel.getBounds().get(0).y +1);
+					//dest = new Point(roadModel.getBounds().get(0).x +1, roadModel.getBounds().get(0).y +1);
+					dest = roadModel.getRandomPosition(rnd);
 				}
 				else {
-					dest = new Point(dest.x-1, dest.y + 1);
+					//dest = new Point(dest.x-1, dest.y + 1);
+					dest = roadModel.getRandomPosition(rnd);
 					downPatrolDest = dest;
 					patrolDown = true;
 					patrolDir = PATROL_DIR.LEFT;
@@ -130,10 +133,12 @@ public abstract class FireFighter implements MovingRoadUser, TickListener {
 			if (Point.distance(roadModel.getPosition(this), dest) < 1) {
 				if (Point.distance(roadModel.getPosition(this), 
 						new Point(roadModel.getBounds().get(0).x, roadModel.getBounds().get(1).y)) < 2.5)
-					dest = new Point(roadModel.getBounds().get(0).x +1, roadModel.getBounds().get(0).y +1);
+					//dest = new Point(roadModel.getBounds().get(0).x +1, roadModel.getBounds().get(0).y +1);
+					dest = roadModel.getRandomPosition(rnd);
 				else {
 					
-					dest = new Point(dest.x+1, dest.y + 1);
+					//dest = new Point(dest.x+1, dest.y + 1);
+					dest = roadModel.getRandomPosition(rnd);
 					downPatrolDest = dest;
 					patrolDown = true;
 					patrolDir = PATROL_DIR.RIGHT;

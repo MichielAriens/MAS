@@ -50,7 +50,7 @@ public class Experiments {
 	 */
 	public static void main(String[] args) {
 		MIN_POINT = new Point(0,0);//minp;
-		MAX_POINT = new Point(20,12);//maxp;
+		MAX_POINT = new Point(20,17);//maxp;
 		failureThreshold = (int) (((MAX_POINT.x - MIN_POINT.x) * (MAX_POINT.y - MIN_POINT.y)) / 1.2);
 
 		// first arg: 0 for dumb fire fighters
@@ -95,24 +95,6 @@ public class Experiments {
 			}
 
 			
-//			int max = 1;
-//		
-//	//		// TODO voor simulaties:
-//			for (int i = 0; i < max; i++) { // seed
-//				for (int j = 5; j < 30; j += 5) { // fire fighters
-//					for (int k = 1; k < 6; k++) { // fires
-//						// dit test 3 communicatiemodellen in zelfde situatie:
-//						run(0,j,k,i);
-//						System.out.println("run " + i + ": mode 0 | fireFighters: " + j + " fires: " + k);
-//						run(1,j,k,i);
-//						System.out.println("run " + i + ": mode 1 | fireFighters: " + j + " fires: " + k);
-//						run(2,j,k,i);
-//						System.out.println("run " + i + ": mode 2 | fireFighters: " + j + " fires: " + k);
-//						writer.flush();
-//					}
-//				}
-//				System.out.println(i + "/" + max);
-//			}
 		} catch (FileNotFoundException e) {
 		} catch (UnsupportedEncodingException e) {
 		} catch (Exception ex) {

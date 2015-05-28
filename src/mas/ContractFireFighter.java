@@ -156,7 +156,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 						lastTaskTime = timeLapse.getStartTime();
 					}
 				}		
-//				roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
+				//roadModel.moveTo(this, roadModel.getRandomPosition(rnd), timeLapse);
 				patrolLR(timeLapse);
 			}
 		}
