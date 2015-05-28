@@ -36,6 +36,8 @@ public class Experiments {
 	private static int numFires;
 	private static long seed;
 	private static PrintWriter writer;
+	private static int losSight;
+	private static int losComm;
 	
 	public Experiments(Point minp, Point maxp) {
 		MIN_POINT = minp;
@@ -48,14 +50,19 @@ public class Experiments {
 	 */
 	public static void main(String[] args) {
 		MIN_POINT = new Point(0,0);//minp;
-		MAX_POINT = new Point(30,20);//maxp;
-		failureThreshold = (int) ((MAX_POINT.x - MIN_POINT.x) * (MAX_POINT.y - MIN_POINT.y)) / 2;
+		MAX_POINT = new Point(20,12);//maxp;
+		failureThreshold = (int) (((MAX_POINT.x - MIN_POINT.x) * (MAX_POINT.y - MIN_POINT.y)) / 1.2);
 
 		// first arg: 0 for dumb fire fighters
 		//run(0,1,123L);
 
 
-		//run(2,50,2,2);
+		//run(1,50,2,3,3,2,true);
+		
+		
+		
+		
+		
 		//run(2,1,2,2);
 
 
@@ -70,23 +77,42 @@ public class Experiments {
 			writer.println("modus0=DumbFireFighter");
 			writer.println("modus1=ContractFireFighter");
 			writer.println("lineofsight=variable");
-			writer.println("modus,numFireFighters,numFires,seed,amountOfTicks");
+			writer.println("modus,numFireFighters,numFires,seed,losSight,losComm,amountOfTicks");
+			writer.println();
+			
+			int maxSeed = 10;
+			
+			for(int los = 10; los >=3; los--){
+				for(int mode = 0; mode < 3; mode++){
+					writer.print(mode + "," + los);
+					for(int seed = 0; seed < maxSeed; seed++){
+						System.out.println("los:" + los + " mode: " +  mode + " seed: " + seed);
+						run(mode,50,2,los,los,seed, false);
+						writer.flush();
+					}
+					writer.println();
+				}
+			}
 
 			
-			int max = 10;
-		
-	//		// TODO voor simulaties:
-			for (int i = 0; i < max; ++i) { // seed
-				for (int j = 1; j < 6; ++j) { // fire fighters
-					for (int k = 1; k < 6; ++k) { // fires
-						// dit test 3 communicatiemodellen in zelfde situatie:
-						run(0,j,k,i);
-						run(1,j,k,i);
-						run(2,j,k,i);
-					}
-				}
-				System.out.println(i + "/" + max);
-			}
+//			int max = 1;
+//		
+//	//		// TODO voor simulaties:
+//			for (int i = 0; i < max; i++) { // seed
+//				for (int j = 5; j < 30; j += 5) { // fire fighters
+//					for (int k = 1; k < 6; k++) { // fires
+//						// dit test 3 communicatiemodellen in zelfde situatie:
+//						run(0,j,k,i);
+//						System.out.println("run " + i + ": mode 0 | fireFighters: " + j + " fires: " + k);
+//						run(1,j,k,i);
+//						System.out.println("run " + i + ": mode 1 | fireFighters: " + j + " fires: " + k);
+//						run(2,j,k,i);
+//						System.out.println("run " + i + ": mode 2 | fireFighters: " + j + " fires: " + k);
+//						writer.flush();
+//					}
+//				}
+//				System.out.println(i + "/" + max);
+//			}
 		} catch (FileNotFoundException e) {
 		} catch (UnsupportedEncodingException e) {
 		} catch (Exception ex) {
@@ -99,11 +125,13 @@ public class Experiments {
 		// TODO LOS ook als variabele
 	}
 
-	public static void run(int modus, int numFireFighters, int numFires, long seed) {
+	public static void run(int modus, int numFireFighters, int numFires, int losSight, int losComm, long seed, boolean gui) {
 		Experiments.modus = modus;
 		Experiments.numFireFighters = numFireFighters;
 		Experiments.numFires = numFires;
 		Experiments.seed = seed;
+		Experiments.losSight = losSight;
+		Experiments.losComm = losComm;
 		roadModel = PlaneRoadModel.builder()
 		        .setMinPoint(MIN_POINT)
 		        .setMaxPoint(MAX_POINT)
@@ -150,13 +178,13 @@ public class Experiments {
 	    if (modus == 0) {
 		    for (int i = 0; i < numFireFighters; i++) {
 
-		    	sim.register(new DumbFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), agvRng));
+		    	sim.register(new SimpleFireFighter(refilPoint, new SimpleLimitedLOS(losSight, losComm, roadModel), agvRng));
 
 		    }
 	    } else if (modus == 1) {
 	    	for (int i = 0; i < numFireFighters; i++) {
 
-		    	sim.register(new ContractFireFighter(roadModel.getRandomPosition(rng), new FullLineOfSight(), agvRng));
+		    	sim.register(new ContractFireFighter(refilPoint, new SimpleLimitedLOS(losSight, losComm, roadModel), agvRng));
 
 		    }
 	    } else if (modus == 2) {
@@ -178,8 +206,7 @@ public class Experiments {
 	    
 	    	for(int i = 0; i < numFireFighters; i++){
 	    		PheromoneNode start = RoadModels.findClosestObject(refilPoint, roadModel, PheromoneNode.class);
-	    		sim.register(new AntFireFighter(start, new SimpleLimitedLOS(3,3, roadModel), rng));	    	
-	    		//sim.register(new AntFireFighter(start, new FullLineOfSight(), rng));
+	    		sim.register(new AntFireFighter(start, new SimpleLimitedLOS(losSight, losComm, roadModel), rng));	    	
 
 	    	} 
 	    }
@@ -195,14 +222,16 @@ public class Experiments {
 	        	// Fire fighting successful
 	        	if (roadModel.getObjectsOfType(Fire.class).isEmpty()) {
 	        		// end simulation
-	        		writer.println(Experiments.modus + "," + Experiments.numFireFighters + "," + Experiments.numFires
-	        				+ "," + Experiments.seed + "," + sim.getCurrentTime()/10000);
+	        		//writer.println(Experiments.modus + "," + Experiments.numFireFighters + "," + Experiments.numFires
+	        		//		+ "," + Experiments.seed + "," + Experiments.losSight + "," + Experiments.losComm + "," + sim.getCurrentTime()/10000);
+	        		writer.print("," + sim.getCurrentTime()/10000);
 	        		sim.stop();
 	        	}
 	        	
 	        	if (roadModel.getObjectsOfType(Fire.class).size() > failureThreshold) {
-	        		writer.println(Experiments.modus + "," + Experiments.numFireFighters + "," + Experiments.numFires
-	        				+ "," + Experiments.seed + "," + "unsuccessful");
+	        		//writer.println(Experiments.modus + "," + Experiments.numFireFighters + "," + Experiments.numFires
+	        		//		+ "," + Experiments.seed + "," + Experiments.losSight + "," + Experiments.losComm + "," + "unsuccessful");
+	        		writer.print(",NA");
 	        		sim.stop();
 	        	}
 	        	
@@ -219,26 +248,27 @@ public class Experiments {
 	        }
 	      });
 	    
-
-	    final View.Builder viewBuilder = View.create(sim)
-	            .with(PlaneRoadModelRenderer.create())
-	            .with(RoadUserRenderer.builder()
-	            	   .addImageAssociation(
-	            	                Fire.class, "/graphics/perspective/tall-building-64.png")
-	            			   		//Fire.class, "img/fire.png")
-	            			   		
-	            	   .addImageAssociation(
-	    	            	        Wet.class, "/graphics/flat/person-red-32.png")
-	            			   		//Wet.class, "img/wet.png"));
-	    	           .addImageAssociation(
-	    	            	        AntFireFighter.class, "/graphics/flat/bus-32.png")
-	    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
-	    	           .addColorAssociation(PheromoneNode.class, new RGB(200, 200, 200))
-	    	     )
-	    	     .with(new LOSRenderer())
-	    	     //.with(new PheromoneRenderer())
-	    	     ;
-	    viewBuilder.show();
+	    if(gui){
+		    final View.Builder viewBuilder = View.create(sim)
+		            .with(PlaneRoadModelRenderer.create())
+		            .with(RoadUserRenderer.builder()
+		            	   .addImageAssociation(
+		            	                Fire.class, "/graphics/perspective/tall-building-64.png")
+		            			   		//Fire.class, "img/fire.png")
+		            			   		
+		            	   .addImageAssociation(
+		    	            	        Wet.class, "/graphics/flat/person-red-32.png")
+		            			   		//Wet.class, "img/wet.png"));
+		    	           .addImageAssociation(
+		    	            	        AntFireFighter.class, "/graphics/flat/bus-32.png")
+		    	           .addColorAssociation(DummyRoadUser.class, new RGB(0, 0, 0))
+		    	           .addColorAssociation(PheromoneNode.class, new RGB(200, 200, 200))
+		    	     )
+		    	     .with(new LOSRenderer())
+		    	     //.with(new PheromoneRenderer())
+		    	     ;
+		    viewBuilder.show();
+	    }
 
 	    // in case a GUI is not desired, the simulation can simply be run by
 	    // calling the start method of the simulator.

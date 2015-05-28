@@ -175,6 +175,7 @@ public class ContractFireFighter extends FireFighter implements CommUser {
 		}
 		if (target != null && roadModel.containsObject(target) && roadModel.equalPosition(this, target)) {
 			--countDown;
+			countDown = 0;
 			if (countDown == 0) {
 				if(target instanceof Fire){
 					((Fire) target).extinguish();
