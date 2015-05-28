@@ -47,7 +47,7 @@ public class PheromoneEdge {
 		}
 		double ratio = oldFireWeight - fireWeigth;
 		ratio = ratio / fires.size();
-		System.out.println(ratio + " | " + this.pheromoneStrength );
+		//System.out.println(ratio + " | " + this.pheromoneStrength );
 		return Math.max(0, this.pheromoneStrength + ratio);
 	}
 	

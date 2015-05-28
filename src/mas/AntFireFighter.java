@@ -28,7 +28,7 @@ public class AntFireFighter extends FireFighter{
 
 	@Override
 	public void tick(TimeLapse timeLapse) {
-		System.out.println(ai.getState());
+		//System.out.println(ai.getState());
 		
 		//Check whether to douse fire.
 		Fire closestFire = RoadModels.findClosestObject(roadModel.getPosition(this), roadModel, Fire.class);

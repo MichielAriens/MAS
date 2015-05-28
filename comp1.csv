@@ -1,0 +1,7 @@
+speed=20.0
+extinguishingtime=30
+firespreadchance=0.0115
+modus0=DumbFireFighter
+modus1=ContractFireFighter
+lineofsight=variable
+modus,numFireFighters,numFires,seed,amountOfTicks
